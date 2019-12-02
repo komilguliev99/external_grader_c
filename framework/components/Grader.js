@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-01 15:16:46
  * @ Modified by: Komil Guliev
- * @ Modified time: 2019-12-02 22:50:15
+ * @ Modified time: 2019-12-02 23:22:54
  * @ Description:
  */
 
@@ -13,21 +13,12 @@ var Valgrind = require('./Valgrind');
 
 var Grader = {
 	variant: 1,
-	task: 1,
 	userOut: 'user_out',
 	valgrind: Valgrind,
 	currentTask: 1,
 	results: {
 		task1: [],
 		task2: [],
-	},
-	tasks: {
-		task1: 'user_task1.c',
-		task2: 'user_task2.c'
-	},
-	binary: {
-		task1: 'binary_01',
-		task2: 'binary_02'
 	},
 	testpathTemplate: 'tests/variant_',
 
@@ -39,7 +30,7 @@ var Grader = {
 		return this.getFormat(this.variant);
 	},
 	getTask: function () {
-		return this.getFormat(this.task);
+		return this.getFormat(this.currentTask);
 	},
 	getTestPath: function(num, out) {
 		let what = out ? 'output_' : 'input_';
@@ -55,7 +46,7 @@ var Grader = {
 		return this.valgrind.command + ' --log-file=' + this.valgrind.logFIle;
 	},
 	compileFiles: async function() {
-		let cmd = `gcc ${this.tasks.task1} -o ${this.binary.task1}`;
+		let cmd = `gcc user_task${this.currentTask}.c -o binary_${this.getFormat(this.currentTask)}`;
 		console.log(cmd);
 		let executed = await this.execute(cmd);
 		
@@ -81,8 +72,8 @@ var Grader = {
 	},
 
 	executeBinary: async function(test) {
-		console.log(`${this.valgrind.getCommand()} ./${this.binary.task1} \< ${this.getTestPath(test)} > ${this.userOut}`);
-		await this.execute(`${this.valgrind.getCommand()} ./${this.binary.task1} \< ${this.getTestPath(test)} > ${this.userOut}`);
+		console.log(`${this.valgrind.getCommand()} ../binary_${this.getFormat(this.currentTask)} \< ${this.getTestPath(test)} > ${this.userOut}`);
+		await this.execute(`${this.valgrind.getCommand()} ./binary_${this.getFormat(this.currentTask)} \< ${this.getTestPath(test)} > ${this.userOut}`);
 
 		this.valgrind.checkLog();
 		if (await this.checkOutputs(test))
@@ -96,8 +87,8 @@ var Grader = {
 		arr.forEach(el => result += (el ? '[OK]' : '[FAIL]'));
 		return result;
 	},
-	start: async function () {
-		let result = "user_task01.c: "
+	startFor: async function (task) {
+		this.currentTask = task;
 		let compiled = await this.compileFiles();
 
 		if (compiled) {
@@ -110,6 +101,10 @@ var Grader = {
 			}
 		}
 		console.log(this.getResults());
+	},
+	run: async function () {
+		await this.startFor(1);
+		await this.startFor(2);
 	}
 };
 
