@@ -1,4 +1,6 @@
 node_modules/
 **binary_*
-
+framework/traces
+framework/user_out
+framefork/valgrindLog
 
