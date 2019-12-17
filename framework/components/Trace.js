@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-02 22:53:07
  * @ Modified by: Komil Guliev
- * @ Modified time: 2019-12-02 22:57:38
+ * @ Modified time: 2019-12-08 14:27:45
  * @ Description:
  */
 
@@ -12,7 +12,7 @@ var Trace = {
 	traceFile: 'traces',
 
 	write: function (data) {
-		fs.writeFileSync(this.traceFile, data);
+		fs.appendFileSync(this.traceFile, data);
 	},
 
 	getContent: function () {
@@ -20,3 +20,5 @@ var Trace = {
 		return content.toString();
 	}
 }
+
+module.exports = Trace;

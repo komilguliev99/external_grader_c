@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-11-29 11:25:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2019-12-02 22:50:54
+ * @ Modified time: 2019-12-08 14:30:36
  * @ Description:
  */
 
@@ -19,8 +19,9 @@ var Valgrind = {
 	},
 
 	calcLeak: function(type) {
-		let log = this.logContent;
-		let index = log.lastIndexOf(type + ' lost'), endLine;
+		let 	log = this.logContent;
+		let 	index = log.lastIndexOf(type + ' lost'), endLine;
+		
 		if (index != -1)
 		{
 			endLine = log.indexOf('\n', index);
@@ -35,7 +36,8 @@ var Valgrind = {
 	},
 
 	checkLog: function () {
-		var log = fs.readFileSync(this.logFile);
+		var 	log = fs.readFileSync(this.logFile);
+
 		this.logContent = log.toString();
 		//console.log(log);
 		this.whatLeaks.forEach(type => this.calcLeak(type));
@@ -43,15 +45,18 @@ var Valgrind = {
 	},
 
 	getStatus: function () {
-		let bytes = 0;
+		let 	bytes = 0;
+
 		Object.keys(this.leaks).forEach(key => bytes += leaks[key].bytes);
 		if (bytes == 0) return 1
 		return 0;
 	},
 
 	getLogs: function () {
-		let logs = '';
-		Object.keys(this.leaks).forEach(key => logs += this.leaks[key].message + '\n');
+		let 	keys = Object.keys(this.leaks);
+		let		logs = keys.length > 0 ? '\n' : '';
+		
+		keys.forEach(key => logs += '\t\t\t' + this.leaks[key].message + '\n');
 		return logs;
 	}
 }

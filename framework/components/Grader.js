@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-01 15:16:46
  * @ Modified by: Komil Guliev
- * @ Modified time: 2019-12-02 23:22:54
+ * @ Modified time: 2019-12-08 14:40:59
  * @ Description:
  */
 
@@ -10,12 +10,16 @@ const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 var fs = require('fs');
 var Valgrind = require('./Valgrind');
+var Trace = require('./Trace');
 
 var Grader = {
 	variant: 1,
 	userOut: 'user_out',
 	valgrind: Valgrind,
+	trace: Trace,
 	currentTask: 1,
+	hash: '',
+	resultData: '',
 	results: {
 		task1: [],
 		task2: [],
@@ -33,8 +37,12 @@ var Grader = {
 		return this.getFormat(this.currentTask);
 	},
 	getTestPath: function(num, out) {
-		let what = out ? 'output_' : 'input_';
+		let 	what = out ? 'output_' : 'input_';
+		
 		return `${this.testpathTemplate}${this.getVariant()}/${this.getTask()}/${what}${this.getFormat(num)}`;
+	},
+	generateHash: function () {
+		this.hash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 	},
 	execute: async function(command) {
 		const { err, stdout, stderr } = await exec(command);
@@ -46,23 +54,20 @@ var Grader = {
 		return this.valgrind.command + ' --log-file=' + this.valgrind.logFIle;
 	},
 	compileFiles: async function() {
-		let cmd = `gcc user_task${this.currentTask}.c -o binary_${this.getFormat(this.currentTask)}`;
-		console.log(cmd);
-		let executed = await this.execute(cmd);
+		let 	cmd = `gcc user_task${this.currentTask}.c -o binary_${this.hash}`;
+		let 	executed = await this.execute(cmd);
 		
 		if (executed) return 1;
 		return 0;
 	},
 
 	checkOutputs: async function (test) {
-		var output = await fs.readFileSync(this.getTestPath(test, true));
-		var user_out = await fs.readFileSync('user_out');
+		var 	output = await fs.readFileSync(this.getTestPath(test, true));
+		var 	user_out = await fs.readFileSync('user_out');
 
 		output = output.toString().trim();
 		user_out = user_out.toString().trim();
 
-		console.log(`OUTPUT: $${output}$`);
-		console.log(`USEROUT: $${user_out}$`);
 		for (let i = 0; i < output.length; i++)
 			if (output[i] != user_out[i])
 				return false;
@@ -72,27 +77,34 @@ var Grader = {
 	},
 
 	executeBinary: async function(test) {
-		console.log(`${this.valgrind.getCommand()} ../binary_${this.getFormat(this.currentTask)} \< ${this.getTestPath(test)} > ${this.userOut}`);
-		await this.execute(`${this.valgrind.getCommand()} ./binary_${this.getFormat(this.currentTask)} \< ${this.getTestPath(test)} > ${this.userOut}`);
+		//console.log(`${this.valgrind.getCommand()} ../binary_${this.hash} \< ${this.getTestPath(test)} > ${this.userOut}`);
+		await this.execute(`${this.valgrind.getCommand()} ./binary_${this.hash} \< ${this.getTestPath(test)} > ${this.userOut}`);
 
 		this.valgrind.checkLog();
-		if (await this.checkOutputs(test))
+		if (await this.checkOutputs(test)) {
 			return this.results['task' + this.currentTask].push(1);
+		}
 		return this.results['task' + this.currentTask].push(0);
 	},
 
-	getResults: function () {
-		let result = `user_task${this.getFormat(this.currentTask)}.cpp: `;
-		let arr = this.results['task' + this.currentTask];
+	setResults: function () {
+		let 	result = `user_task${this.getFormat(this.currentTask)}.cpp: \n\t\tTESTS: `;
+		let 	arr = this.results['task' + this.currentTask];
+
 		arr.forEach(el => result += (el ? '[OK]' : '[FAIL]'));
+		result += '\n\t\tLEAKS:' + this.valgrind.getLogs() + '\n\n';
+		this.trace.write(result);
 		return result;
 	},
 	startFor: async function (task) {
 		this.currentTask = task;
-		let compiled = await this.compileFiles();
+		this.generateHash();
+		let 	compiled = await this.compileFiles();
 
 		if (compiled) {
 			let i = 1, exist = true;
+			if (i === 1) 	this.resultData += `user_task${this.getFormat(this.currentTask)}.cpp: \n\tTESTS: %STATUS%\n`;
+			else 			this.resultData += `\t\ttest_${this.getFormat(i)}: `
 			exist = fs.existsSync(this.getTestPath(i));
 			while (exist)
 			{
@@ -100,7 +112,8 @@ var Grader = {
 				exist = fs.existsSync(this.getTestPath(++i));
 			}
 		}
-		console.log(this.getResults());
+		this.execute(`rm binary_${this.hash}`);
+		console.log(this.setResults());
 	},
 	run: async function () {
 		await this.startFor(1);

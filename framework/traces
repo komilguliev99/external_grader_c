@@ -1,0 +1,39 @@
+user_task02.cpp: 
+		TESTS: [OK][OK]
+		LEAKS:			definitely lost: 4 bytes in 1 blocks
+			indirectly lost: 0 bytes in 0 blocks
+			possibly lost: 0 bytes in 0 blocks
+
+
+user_task01.cpp: 
+		TESTS: [OK][OK][OK]
+		LEAKS:
+			definitely lost: 4 bytes in 1 blocks
+			indirectly lost: 0 bytes in 0 blocks
+			possibly lost: 0 bytes in 0 blocks
+
+
+user_task02.cpp: 
+		TESTS: [OK][OK]
+		LEAKS:
+			definitely lost: 4 bytes in 1 blocks
+			indirectly lost: 0 bytes in 0 blocks
+			possibly lost: 0 bytes in 0 blocks
+
+
+user_task01.cpp: 
+		TESTS: [OK][OK][OK]
+		LEAKS:
+			definitely lost: 4 bytes in 1 blocks
+			indirectly lost: 0 bytes in 0 blocks
+			possibly lost: 0 bytes in 0 blocks
+
+
+user_task02.cpp: 
+		TESTS: [OK][OK]
+		LEAKS:
+			definitely lost: 4 bytes in 1 blocks
+			indirectly lost: 0 bytes in 0 blocks
+			possibly lost: 0 bytes in 0 blocks
+
+
