@@ -1,33 +1,25 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   http.js                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dcapers <dcapers@student.21-school.ru>     +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/01/23 11:47:41 by dcapers           #+#    #+#             */
-/*   Updated: 2020/01/23 11:47:41 by dcapers          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+/**
+ * @ Author: Komil Guliev
+ * @ Create Time: 2020-01-23 11:47:04
+ * @ Modified by: Komil Guliev
+ * @ Modified time: 2020-01-23 23:30:40
+ * @ Description:
+ */
 
 var axios = require('axios');
 var fs = require('fs');
+var global = require('../configs/global');
 
 var http = {
-	baseDomain: 'https://git.miem.hse.ru/api/v4',
-	accessToken: 'ffVrpATDs77Q9xPtisM7',
-	projectName: 'examm',
-
-
 	post: async function (url, params)
 	{	
 		var		data;
 		
 		const	configs = {
-					headers: { "Authorization":` Bearer ${this.accessToken}` }
+					headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
 				};
 
-		await axios.post(`${this.baseDomain}${url}`, params, configs)
+		await axios.post(`${global.GITLAB_DOMAIN}${url}`, params, configs)
 		.then(function (response) {
 			//console.log(response.data);
 			data = response.data;
@@ -42,27 +34,28 @@ var http = {
 
 	get: async function(url, params = {})
 	{
-		let		paramsStr = '';
+		let		paramsStr = '?access_token=' + global.GITLAB_ACCESS_TOKEN;
 		let		data;
+		const	configs = {
+			headers: { "PRIVATE-TOKEN":`${global.GITLAB_ACCESS_TOKEN}` }
+		};
 
-		Object.keys(params).forEach((key, i) => {
-			if (i > 0)
-				paramsStr += '&';
-			paramsStr += key + '=' + params[key];
-		});
+		Object.keys(params).forEach((key, i) =>	paramsStr += "&" + 	key + '=' + params[key]);
 
-		axios.get(`${this.baseDomain}${url}?${paramsStr}`)
+		await axios.get(`${global.GITLAB_DOMAIN}${url}${paramsStr}`, configs)
 		.then(function (response) {
 			data = response.data;
+			console.log(data);
 		})
 		.catch(function (error) {
 			data = error;
+			console.log(error);
 		})
 
 		return data;
 	},
 
-	uploadFile: async function uploadFile(conf, branch = 'master', commitMessage = 'Initial state')
+	uploadFile: async function (conf, branch = 'master', commitMessage = 'Initial state')
 	{
 		var		buff = fs.readFileSync(configs.filePath);
 		const	content = buff.toString();
@@ -72,16 +65,34 @@ var http = {
 					content
 				};
 		const	configs = {
-			headers: { "Authorization":` Bearer ${this.accessToken}` }
+			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
 		};
 
-		await axios.post(`${this.baseDomain}/projects/${conf.projectId}/repository/files/${conf.filePath}`, params, configs)
+		await axios.post(`${global.GITLAB_DOMAIN}/projects/${conf.projectId}/repository/files/${conf.filePath}`, params, configs)
 		.then(function (response) {
 			console.log(response.data);
 		})
 		.catch(function (error) {
 			console.log(error);
 		});
+	},
+
+	getRepoFile: async function (id, filePath, ref = 'master')
+	{
+		let		data;
+		let		buff;
+		
+		try {
+			data = await this.get(`/projects/${id}/repository/files/${filePath}`, {ref});
+			console.log(data);
+			if (data)
+			{
+				buff = Buffer.from(data.content, 'base64');
+				return buff.toString();
+			}
+		} catch(error) {
+			return false;
+		}
 	},
 
 	createProject: async function(title)
@@ -96,8 +107,9 @@ var http = {
 	{
 		let		projectId;
 		
-		projectId = await this.createProject(this.projectName + user.userName);
+		projectId = await this.createProject(global.GITLAB_PROJECT_NAME + '_' + user.userName);
 		await this.post(`/projects/${projectId}/members`, {"user_id": user.id, "access_level": 40});
+		user.projectId = projectId;
 		return projectId;
 	},
 
@@ -108,13 +120,16 @@ var http = {
 		for (let i = 0; i < users.length; i++)
 		{
 			let user = users[i];
-			let id = await this.createProjectForUser(user);
-			let	project = {
-				id,
-				user: user.userName,
-				userID: user.id
+			if (!user.projectId)
+			{
+				let id = await this.createProjectForUser(user);
+				let	project = {
+					id,
+					user: user.userName,
+					userID: user.id
+				}
 			}
-			projectsInfo.push(project);
+			projectsInfo.push(user);
 		}
 
 		console.log("PROJECTS: ", projectsInfo);
@@ -123,10 +138,10 @@ var http = {
 	deleteProject: async function (projectID)
 	{
 		const	configs = {
-			headers: { "Authorization":` Bearer ${this.accessToken}` }
+			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
 		};
 
-		await axios.delete(this.baseDomain + '/projects/' + projectID, configs)
+		await axios.delete(global.GITLAB_DOMAIN + '/projects/' + projectID, configs)
 		.then(function (response) {
 			//console.log(response.data);
 			data = response.data;
@@ -148,6 +163,14 @@ var http = {
 			i++;
 		}
 
+	},
+
+	commitList: async function(projectID)
+	{
+		let		data;
+
+		data = await this.get('/projects/' + projectID + '/repository/commits');
+		return data;
 	}
 };
 
