@@ -2,13 +2,14 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-23 23:30:40
+ * @ Modified time: 2020-01-24 08:16:59
  * @ Description:
  */
 
 var axios = require('axios');
 var fs = require('fs');
 var global = require('../configs/global');
+var lib = require('../lib');
 
 var http = {
 	post: async function (url, params)
@@ -57,7 +58,7 @@ var http = {
 
 	uploadFile: async function (conf, branch = 'master', commitMessage = 'Initial state')
 	{
-		var		buff = fs.readFileSync(configs.filePath);
+		var		buff = fs.readFileSync(conf.filePath);
 		const	content = buff.toString();
 		const	params = {
 					branch: branch,
@@ -68,7 +69,7 @@ var http = {
 			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
 		};
 
-		await axios.post(`${global.GITLAB_DOMAIN}/projects/${conf.projectId}/repository/files/${conf.filePath}`, params, configs)
+		await axios.post(`${global.GITLAB_DOMAIN}/projects/${conf.projectId}/repository/files/tasks.txt`, params, configs)
 		.then(function (response) {
 			console.log(response.data);
 		})
@@ -107,9 +108,14 @@ var http = {
 	{
 		let		projectId;
 		
+		let		taskVariant = lib.rangeRandom(1, 23);
+		let		filePath = `./gitlab_scripts/tasks/variant_${lib.getFormat(taskVariant)}.txt`;
+
 		projectId = await this.createProject(global.GITLAB_PROJECT_NAME + '_' + user.userName);
+		this.uploadFile({projectId, filePath});
 		await this.post(`/projects/${projectId}/members`, {"user_id": user.id, "access_level": 40});
 		user.projectId = projectId;
+		user.taskVariant = taskVariant;
 		return projectId;
 	},
 

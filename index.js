@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-23 23:14:45
+ * @ Modified time: 2020-01-24 08:23:40
  * @ Description:
  */
 
@@ -10,6 +10,7 @@
 var http = require('./gitlab_scripts/http');
 var fs = require('fs');
 var global = require('./configs/global');
+var lib = require('./lib');
 
 var students = fs.readFileSync("./" + global.GITLAB_STUDENTS_INFO);
 students = JSON.parse(students).students;
@@ -62,11 +63,14 @@ async function run() {
 	// if (students)
 	// {
 	// 	await http.createProjectsForUsers(students);
-	// 	let id = setInterval(checkRepo, 5000);
+	// 	fs.writeFileSync("./" + global.GITLAB_STUDENTS_INFO, JSON.stringify({students}));
+	// 	//let id = setInterval(checkRepo, 5000);
 	// }
 
-	let content = await http.getRepoFile(58, 'test');
-	console.log("CONETN: ", content);
+	// let content = await http.getRepoFile(58, 'test');
+	// console.log("CONETN: ", content);
+
+	http.deleteProject(58);
 }
 
 run();
