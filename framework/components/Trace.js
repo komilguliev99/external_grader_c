@@ -2,17 +2,21 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-02 22:53:07
  * @ Modified by: Komil Guliev
- * @ Modified time: 2019-12-08 14:27:45
+ * @ Modified time: 2020-01-25 10:46:59
  * @ Description:
  */
 
 var fs = require('fs');
+var global = require('../../configs/global')
 
 var Trace = {
-	traceFile: 'traces',
+	traceFile: `./${global.GRADER.PATH}traces`,
 
-	write: function (data) {
-		fs.appendFileSync(this.traceFile, data);
+	write: function (data, append) {
+		if (append)
+			fs.appendFileSync(this.traceFile, data);
+		else
+			fs.writeFileSync(this.traceFile, data);
 	},
 
 	getContent: function () {

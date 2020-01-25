@@ -1,39 +1,13 @@
-user_task02.cpp: 
-		TESTS: [OK][OK]
-		LEAKS:			definitely lost: 4 bytes in 1 blocks
-			indirectly lost: 0 bytes in 0 blocks
-			possibly lost: 0 bytes in 0 blocks
+user_task01.c: 
+		ТЕСТЫ: [OK][OK][OK]
+		УТЕЧКИ В ПАМЯТИ:
+			44 байта точных утечек в 1 блоке
+			Нет косвенных утечек в программе
+			Нет возможных утечек в программе
 
 
-user_task01.cpp: 
-		TESTS: [OK][OK][OK]
-		LEAKS:
-			definitely lost: 4 bytes in 1 blocks
-			indirectly lost: 0 bytes in 0 blocks
-			possibly lost: 0 bytes in 0 blocks
-
-
-user_task02.cpp: 
-		TESTS: [OK][OK]
-		LEAKS:
-			definitely lost: 4 bytes in 1 blocks
-			indirectly lost: 0 bytes in 0 blocks
-			possibly lost: 0 bytes in 0 blocks
-
-
-user_task01.cpp: 
-		TESTS: [OK][OK][OK]
-		LEAKS:
-			definitely lost: 4 bytes in 1 blocks
-			indirectly lost: 0 bytes in 0 blocks
-			possibly lost: 0 bytes in 0 blocks
-
-
-user_task02.cpp: 
-		TESTS: [OK][OK]
-		LEAKS:
-			definitely lost: 4 bytes in 1 blocks
-			indirectly lost: 0 bytes in 0 blocks
-			possibly lost: 0 bytes in 0 blocks
-
+user_task02.c: 
+		ТЕСТЫ: [FAIL][FAIL]
+		УТЕЧКИ В ПАМЯТИ:
+			Все блоки кучи были освобождены - утечки невозможны
 

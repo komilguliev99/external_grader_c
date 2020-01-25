@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-24 08:16:59
+ * @ Modified time: 2020-01-24 09:01:10
  * @ Description:
  */
 
@@ -46,11 +46,11 @@ var http = {
 		await axios.get(`${global.GITLAB_DOMAIN}${url}${paramsStr}`, configs)
 		.then(function (response) {
 			data = response.data;
-			console.log(data);
+			//console.log(data);
 		})
 		.catch(function (error) {
 			data = error;
-			console.log(error);
+			console.log(error.response.data);
 		})
 
 		return data;
@@ -85,7 +85,7 @@ var http = {
 		
 		try {
 			data = await this.get(`/projects/${id}/repository/files/${filePath}`, {ref});
-			console.log(data);
+			//console.log(data);
 			if (data)
 			{
 				buff = Buffer.from(data.content, 'base64');
