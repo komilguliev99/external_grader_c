@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-24 09:29:28
+ * @ Modified time: 2020-01-25 22:00:28
  * @ Description:
  */
 
@@ -12,6 +12,7 @@ var fs = require('fs');
 var global = require('./configs/global');
 var Grader = require('./framework/components/Grader');
 var lib = require('./lib');
+const	zulip = require('./gitlab_scripts/zulip');
 
 var students = fs.readFileSync("./" + global.GITLAB_STUDENTS_INFO);
 students = JSON.parse(students).students;
@@ -47,6 +48,7 @@ async function checkRepo() {
 	while (i < students.length)
 	{
 		//console.log(students[i]);
+		Grader.reset();
 
 		let check = await checkLastUpdate(students[i])
 
@@ -67,8 +69,14 @@ async function checkRepo() {
 			{
 				Grader.variant = students[i].taskVariant;
 				await Grader.run();
-				let result = `${students[i].userName}: ${students[i].lastUpdate}\n ${Grader.setResults()}\n`;
-				fs.appendFileSync('./LOGS/log', result);
+				let trace = Grader.getTrace();
+				let result = `Вы загрузили новые данные студент ${students[i].userName}\t Дата загрузки: ${students[i].lastUpdate} \n ${trace}\n`;
+				
+				zulip.sendMessage({
+					to: `${students[i].userName}@miem.hse.ru`,
+					type: "private",
+					content: result
+				});
 			}
 		}
 		i++;
