@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-01 15:16:46
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-25 16:55:16
+ * @ Modified time: 2020-01-25 18:11:31
  * @ Description:
  */
 
@@ -40,6 +40,13 @@ var Grader = {
 		this.resultData = '';
 		this.valgrind.reset();
 	},
+	resetAll: function() {
+		this.reset();
+		this.results = {
+			task1: [],
+			task2: [],
+		};
+	},
 	getVariant: function () {
 		return this.getFormat(this.variant);
 	},
@@ -76,6 +83,9 @@ var Grader = {
 		if (err)
 			return 0;
 		return 1;
+	},
+	getTrace: function () {
+		return this.trace.getContent();
 	},
 	getValgrindCmd:  function () {
 		return this.valgrind.command + ' --log-file=' + this.valgrind.logFIle;
@@ -130,11 +140,11 @@ var Grader = {
 	},
 
 	setResults: function (append = false) {
-		let 	result = `user_task${this.getFormat(this.currentTask)}.c: \n\t\tТЕСТЫ: `;
+		let 	result = `user_task${this.getFormat(this.currentTask)}.c: \n        ТЕСТЫ: `;
 		let 	arr = this.results['task' + this.currentTask];
 
 		arr.forEach(el => result += `[${this.status[el]}]`);
-		result += '\n\t\tУТЕЧКИ В ПАМЯТИ:' + this.valgrind.getLogs() + '\n\n';
+		result += '\n        УТЕЧКИ В ПАМЯТИ:' + this.valgrind.getLogs() + '\n\n';
 
 		this.trace.write(result, append);
 		return result;
@@ -148,8 +158,8 @@ var Grader = {
 		//console.log("COMPILED: ", compiled);
 		if (compiled) {
 			let i = 1, exist = true;
-			if (i === 1) 	this.resultData += `./${global.GRADER.PATH}user_task${this.getFormat(this.currentTask)}.cpp: \n\tТЕСТЫ: %STATUS%\n`;
-			else 			this.resultData += `\t\ttest_${this.getFormat(i)}: `
+			if (i === 1) 	this.resultData += `./${global.GRADER.PATH}user_task${this.getFormat(this.currentTask)}.c: \n    ТЕСТЫ: %STATUS%\n`;
+			else 			this.resultData += `        test_${this.getFormat(i)}: `
 			//console.log(this.getTestPath(i));
 			exist = fs.existsSync(this.getTestPath(i));
 			while (exist)
