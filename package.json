@@ -1,0 +1,24 @@
+{
+  "name": "grader_node_js",
+  "version": "1.0.0",
+  "description": "Grader for C programming tasks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KomilGuliev/grader_node_js.git"
+  },
+  "author": "Komil Guliev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KomilGuliev/grader_node_js/issues"
+  },
+  "homepage": "https://github.com/KomilGuliev/grader_node_js#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "fs": "0.0.1-security",
+    "zulip-js": "^2.0.7"
+  }
+}
