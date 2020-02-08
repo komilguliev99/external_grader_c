@@ -1,0 +1,12 @@
+{
+    "students": [
+        {
+            "gmail": "sermatov@miem.hse.ru",
+            "name": "Сухайл"
+        },
+        {
+            "gmail": "dfan@miem.hse.ru",
+            "name": "Вьет"
+        }
+    ]
+}

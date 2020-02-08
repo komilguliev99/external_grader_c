@@ -1,0 +1,26 @@
+{
+    "autoHeader": {
+        "format": {
+            "startWith": "/**",
+            "middleWith": "*",
+            "endWith": "*/",
+            "headerPrefix": "@",
+        },
+        "header": {
+            "Author": "Komil Guliev",
+            "Create Time": {
+                "type": "createTime",
+                "format": "YYYY-MM-DD HH:mm:ss",
+            },
+            "Modified by": {
+                "type": "modifier",
+                "value": "Komil Guliev",
+            },
+            "Modified time": {
+                "type": "modifyTime",
+                "format": "YYYY-MM-DD HH:mm:ss"
+            },
+            "Description": "",
+        }
+    }
+}

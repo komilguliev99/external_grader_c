@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-25 22:00:28
+ * @ Modified time: 2020-02-02 22:27:33
  * @ Description:
  */
 
@@ -13,10 +13,11 @@ var global = require('./configs/global');
 var Grader = require('./framework/components/Grader');
 var lib = require('./lib');
 const	zulip = require('./gitlab_scripts/zulip');
+const	classroom = require('./google_scripts/classroom');
 
 var students = fs.readFileSync("./" + global.GITLAB_STUDENTS_INFO);
 students = JSON.parse(students).students;
-console.log(students);
+//console.log(students);
 
 async function checkLastUpdate(student)
 {
@@ -101,5 +102,6 @@ async function run() {
 	//http.deleteProject(58);
 }
 
-run();
+//run();
 
+classroom.createCourseWork();
