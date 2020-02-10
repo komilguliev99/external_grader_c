@@ -6,6 +6,8 @@
  * @ Description:
  */
 
+ const logPerm = false;
+
 var		lib = {
 	rangeRandom: function (min, max) {
 		// получить случайное число от (min-0.5) до (max+0.5)
@@ -15,7 +17,12 @@ var		lib = {
 	getFormat: function(number) {
 		if (number < 10) return '0' + number;
 		return number.toString();
-	}	
+	},
+	logOut: function (...logs)
+	{
+		if (logPerm)
+			console.log(...logs);
+	}
 }
 
 module.exports = lib;

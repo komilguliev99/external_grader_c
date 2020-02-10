@@ -10,14 +10,16 @@
 var http = require('./gitlab_scripts/http');
 var fs = require('fs');
 var global = require('./configs/global');
-var Grader = require('./framework/components/Grader');
+var Grader = require('./grader_scripts/components/Grader');
 var lib = require('./lib');
 const	zulip = require('./gitlab_scripts/zulip');
 const	classroom = require('./google_scripts/classroom');
 
+var			VARIANTS = JSON.parse(fs.readFileSync(`${global.GRADER.PATH}taskVariants.json`)).variants;
+
 var students = fs.readFileSync("./" + global.GITLAB_STUDENTS_INFO);
 students = JSON.parse(students).students;
-//console.log(students);
+console.log(students);
 
 async function checkLastUpdate(student)
 {
@@ -39,12 +41,16 @@ async function checkLastUpdate(student)
 				date: lastUpdate
 			};
 		}
+		return { status: false };
 	}
 	return { status: false };
 }
 
 async function checkRepo() {
 	let		i = 0, st = false;
+	let		variant;
+	let		taskCount = 0;
+	let		tasks = [];
 
 	while (i < students.length)
 	{
@@ -52,29 +58,32 @@ async function checkRepo() {
 		Grader.reset();
 
 		let check = await checkLastUpdate(students[i])
-
+		variant = students[i].taskVariant;
+		taskCount = VARIANTS.taskCounts[variant - 1];
 		if (check.status)
 		{
 			st = true;
-			console.log("GITLAB_FILES: ", global.GITLAB_FILES[0]);
-			//fs.appendFileSync('LOG', `${check.date}    Project: ${students[i].projectId} Username: ${students[i].userName}\n`);
-			let task1 = await http.getRepoFile(students[i].projectId, global.GITLAB_FILES[0]);
-			let task2 = await http.getRepoFile(students[i].projectId, global.GITLAB_FILES[1]);
+			//console.log("GITLAB_FILES: ", global.GITLAB_FILES[0]);
 			
-			if (task1)
-				fs.writeFileSync('./framework/user_task1.c', task1);
-			if (task2)
-				fs.writeFileSync('./framework/user_task2.c', task2);
+			let		j = 0;
+			while (j < taskCount)
+				tasks.push(await http.getRepoFile(students[i].projectId, `code${++j}.c`));
 			
-			if (task1 || task2) 
+			if (tasks.length > 0) 
 			{
-				Grader.variant = students[i].taskVariant;
+				Grader.variant = variant;
+				Grader.taskFiles = tasks;
+				Grader.taskCount = taskCount;
+				Grader.types = VARIANTS.types[variant - 1];
+				Grader.weights = VARIANTS.weights[variant - 1];
 				await Grader.run();
 				let trace = Grader.getTrace();
-				let result = `Вы загрузили новые данные студент ${students[i].userName}\t Дата загрузки: ${students[i].lastUpdate} \n ${trace}\n`;
+				let result = `Вы загрузили новые данные студент ${students[i].userName}\t Дата загрузки: ${students[i].lastUpdate} \n\n ${trace}\n`;
+				result = result + "```Оценка за работу: " + Grader.getAssignedGrade() + "```";
 				
+				console.log(result);
 				zulip.sendMessage({
-					to: `${students[i].userName}@miem.hse.ru`,
+					to: `kzguliev@miem.hse.ru`,
 					type: "private",
 					content: result
 				});
@@ -102,6 +111,5 @@ async function run() {
 	//http.deleteProject(58);
 }
 
-//run();
+run();
 
-classroom.createCourseWork();

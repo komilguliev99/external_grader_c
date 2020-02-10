@@ -60,7 +60,7 @@ var Valgrind = {
 	getStatus: function () {
 		let 	bytes = 0;
 
-		Object.keys(this.leaks).forEach(key => bytes += leaks[key].bytes);
+		Object.keys(this.leaks).forEach(key => bytes += this.leaks[key].bytes);
 		if (bytes == 0) return 1
 		return 0;
 	},
@@ -96,7 +96,7 @@ var Valgrind = {
 		let		logs = keys.length > 0 ? '\n' : '';
 		
 		keys.forEach(key => logs += '\t\t\t' + this.getMessage(key) + '\n');
-		if (keys.length === 0) logs += "\n\t\t\t" + this.templateMessages.NO_LEAKS;
+		if (keys.length === 0) logs += "\n\t\t\t" + this.templateMessages.NO_LEAKS + "\n";
 		return logs;
 	}
 }

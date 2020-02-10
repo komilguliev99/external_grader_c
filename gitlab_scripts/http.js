@@ -50,7 +50,7 @@ var http = {
 		})
 		.catch(function (error) {
 			data = error;
-			console.log(error.response.data);
+			console.log("ERROR: ", error.response.config.url);
 		})
 
 		return data;

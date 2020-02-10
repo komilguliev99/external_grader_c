@@ -14,13 +14,13 @@ var global = {
 	GITLAB_FILES: ['code1.c', 'code2.c'],
 
 	GRADER: {
-		PATH: 'framework/',
+		PATH: 'grader_scripts/',
 		TASK1: 'user_task1.c',
 		TASK2: 'user_task2.c',
 
 		BINARY_DELET: true,
 
-		TASK_STATUS: ["FAIL", "OK", "ERROR"]
+		TASK_STATUS: ["FAIL", "OK", "ERROR", "TIME_OUT"]
 	},
 
 	VALGRIND: {

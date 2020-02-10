@@ -9,6 +9,7 @@
 const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
+const lib = require('../lib');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = [
@@ -35,7 +36,7 @@ function readCredentials()
     try {
         content = fs.readFileSync("./google_scripts/credentials.json");
     } catch (error) {
-        console.log(error);
+        lib.logOut(error);
         return null;
     }
     return JSON.parse(content);
@@ -71,7 +72,7 @@ function getNewToken(oAuth2Client, callback) {
     access_type: 'offline',
     scope: SCOPES,
   });
-  console.log('Authorize this app by visiting this url:', authUrl);
+  lib.logOut('Authorize this app by visiting this url:', authUrl);
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -84,7 +85,7 @@ function getNewToken(oAuth2Client, callback) {
       // Store the token to disk for later program executions
       fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
         if (err) return console.error(err);
-        console.log('Token stored to', TOKEN_PATH);
+        lib.logOut('Token stored to', TOKEN_PATH);
       });
       callback(oAuth2Client);
     });
@@ -104,12 +105,12 @@ function listCourses(auth) {
     if (err) return console.error('The API returned an error: ' + err);
     const courses = res.data.courses;
     if (courses && courses.length) {
-      console.log('Courses:');
+      lib.logOut('Courses:');
       courses.forEach((course) => {
-        console.log(`${course.name} (${course.id})`);
+        lib.logOut(`${course.name} (${course.id})`);
       });
     } else {
-      console.log('No courses found.');
+      lib.logOut('No courses found.');
     }
   });
 }
@@ -117,9 +118,11 @@ function listCourses(auth) {
 //authorize(credentials, listCourses);
 
 const courseId = 43751834869;
-const courseWorkId = null;
+const courseWorkId = 61741339469;
 
-function    courseWorkCreator(auth)
+
+// create course callback
+function    courseWorkCreator(auth, resolve, reject)
 {
     const classroom = google.classroom({version: 'v1', auth});
 
@@ -135,45 +138,168 @@ function    courseWorkCreator(auth)
     classroom.courses.courseWork.create({
         courseId,
         requestBody: courseWork
-    }, (err, res) => {
-        if (err) return console.error('The API returned an error: ' + err);
-        courseWorkId = res.data.id;
-        return console.log(res.data);
     })
-}
+    .then(res => resolve(res))
+    .catch(err => reject(err));
+};
 
-async function getStudentId(email)
+
+// get submission list callback
+function    submissionList(auth, resolve, reject)
 {
-    authorize(credentials, auth => {
-        const classroom = google.classroom({version: 'v1', auth});
+  const classroom = google.classroom({version: 'v1', auth});
+  
+  classroom.courses.courseWork.studentSubmissions.list({
+      courseId,
+      courseWorkId
+  })
+  .then(res => resolve(res))
+  .catch(err => reject(err));
+};
 
-        classroom.courses.students.list({courseId},{courseId}, (err, res) => {
-            if (err) return console.error('The API returned an error: ' + err);
-            courseWorkId = res.data.id;
-            return console.log(res.data);
-        });
-    })
+
+// get students list callback
+function    studentsList(auth, resolve, reject)
+{
+  const classroom = google.classroom({version: 'v1', auth});
+    
+  classroom.courses.students.list({
+    courseId
+  })
+  .then(res => resolve(res))
+  .catch(err => reject(err));
 }
 
-getStudentId("dfan@miem.hse.ru");
+// set grade of submission
+function    setStudentGrade(auth, resolve, reject, conf)
+{
+  const classroom = google.classroom({version: 'v1', auth});
+
+  classroom.courses.courseWork.studentSubmissions.patch(conf)
+  .then(res => resolve(res))
+  .catch(err => reject(err));
+}
+
+//getStudentId("dfan@miem.hse.ru");
 const   classroom = {
-    createCourseWork: function (title)
+
+
+    createCourseWork: async function (title)
     {
-        authorize(credentials, courseWorkCreator);
-    },
-    setGrade: function (email, points)
-    {
-        authorize(credentials, auth => {
-            var subId = getSubId(courseId, courseworkId, studentEmail);
-            
-            //set grades
-            var resource = {'draftGrade' : points};
-            var updateMask = {'updateMask' : 'draftGrade'};
-            var result = Classroom.Courses.CourseWork.StudentSubmissions.patch(resource, courseId, courseworkId, subId, updateMask);
-            resource = {'assignedGrade' : points};
-            updateMask = {'updateMask' : 'assignedGrade'};
-            result = Classroom.Courses.CourseWork.StudentSubmissions.patch(resource, courseId, courseworkId, subId, updateMask);
+        await new Promise((resolve, reject) => {
+          authorize(credentials, (auth) => courseWorkCreator(auth, resolve, reject));
         })
+        .then(res => lib.logOut(res.data))
+        .catch(err => lib.logOut(err));
+    },
+
+
+    studentSubList: async function ()
+    {
+      let     subList;
+
+      lib.logOut("SUBMISSION LIST: ")
+      await new Promise((resolve, reject) => {
+        authorize(credentials, (auth) => submissionList(auth, resolve, reject));
+      })
+      .then(res => subList = res.data.studentSubmissions)
+      .catch(err => lib.logOut(err));
+      lib.logOut("SUBMISSION LIST: END!!!!");
+      return subList;
+    },
+
+
+    studentsList: async function ()
+    {
+      let       studentList = null;
+
+      lib.logOut("students LIST: ")
+      await new Promise((resolve, reject) => {
+        authorize(credentials, (auth) => studentsList(auth, resolve, reject));
+      })
+      .then(res => studentList = res.data.students)
+      .catch(err => lib.logOut(err));
+      lib.logOut("students LIST: END!!!!");
+
+      return studentList;
+    },
+
+
+    getStudentId: async function (email)
+    {
+        let     studentId = null;
+        let     studentList = null;
+
+        studentList = await this.studentsList.call(this);
+        lib.logOut("StudentList: ", studentList);
+
+        if (studentList.length > 0)
+        {
+          let     i = 0;
+
+          while (i < studentList.length)
+          {
+            if (studentList[i].profile.emailAddress == email)
+              return studentList[i].userId;
+            i++;
+          }
+
+          lib.logOut("There is no students with email: ", email);
+        }
+        lib.logOut("There is no students in course!");
+        return null;
+    },
+
+    getSubId: async function (userId)
+    {
+      let     subList = null;
+
+      subList = await this.studentSubList.call(this);
+      //lib.logOut("SUBLIST: ", subList);
+      
+      if (subList.length > 0)
+      {
+        let     i = 0;
+
+        while (i < subList.length)
+        {
+          if (subList[i].userId == userId)
+            return subList[i].id;
+          i++;
+        }
+      }
+      return null;
+    },
+
+    setGrade: async function (email, points)
+    {
+      let     subId;
+      let     userId = await this.getStudentId.call(this, email);
+      let     updateMask = {'updateMask' : 'assignedGrade'};
+
+      lib.logOut("USER_ID: ", userId);
+      if (userId)
+      {
+        subId = await this.getSubId.call(this, userId);
+        lib.logOut("SetGrade: subId: ", subId);
+
+        let conf = {
+          requestBody: {
+            "assignedGrade" : points
+          },
+          courseId,
+          courseWorkId,
+          id: subId,
+          ...updateMask
+        }
+        await new Promise((resolve, reject) => {
+          authorize(credentials, (auth) => setStudentGrade(auth, resolve, reject, conf));
+        })
+        .then(data => lib.logOut(data.data))
+        .catch(err => lib.logOut(err));
+      }
+      else
+        lib.logOut("ERROR: no userId!");
     }
 }
 
