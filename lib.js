@@ -2,11 +2,11 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-24 08:01:44
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-24 08:05:25
+ * @ Modified time: 2020-02-11 00:56:24
  * @ Description:
  */
 
- const logPerm = false;
+ const logPerm = true;
 
 var		lib = {
 	rangeRandom: function (min, max) {

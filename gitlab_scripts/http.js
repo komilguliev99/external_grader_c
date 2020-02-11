@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-24 09:01:10
+ * @ Modified time: 2020-02-11 00:03:39
  * @ Description:
  */
 
@@ -46,7 +46,7 @@ var http = {
 		await axios.get(`${global.GITLAB_DOMAIN}${url}${paramsStr}`, configs)
 		.then(function (response) {
 			data = response.data;
-			//console.log(data);
+			//console.log(response);
 		})
 		.catch(function (error) {
 			data = error;
@@ -104,14 +104,14 @@ var http = {
 		return result.id;
 	},
 
-	createProjectForUser: async function(user)
+	createProjectForUser: async function(user, projectName)
 	{
 		let		projectId;
 		
 		let		taskVariant = lib.rangeRandom(1, 23);
 		let		filePath = `./gitlab_scripts/tasks/variant_${lib.getFormat(taskVariant)}.txt`;
 
-		projectId = await this.createProject(global.GITLAB_PROJECT_NAME + '_' + user.userName);
+		projectId = await this.createProject(projectName + '_' + user.userName);
 		this.uploadFile({projectId, filePath});
 		await this.post(`/projects/${projectId}/members`, {"user_id": user.id, "access_level": 40});
 		user.projectId = projectId;
@@ -119,26 +119,31 @@ var http = {
 		return projectId;
 	},
 
-	createProjectsForUsers: async function (users)
+	createProjectsForUsers: async function (users, projectName)
 	{
-		let		projectsInfo = [];
-
 		for (let i = 0; i < users.length; i++)
 		{
 			let user = users[i];
 			if (!user.projectId)
-			{
-				let id = await this.createProjectForUser(user);
-				let	project = {
-					id,
-					user: user.userName,
-					userID: user.id
-				}
-			}
-			projectsInfo.push(user);
+				await this.createProjectForUser(user, projectName);
 		}
 
-		console.log("PROJECTS: ", projectsInfo);
+		//console.log("PROJECTS: ", users);
+	},
+
+
+	setUsersID: async function (users)
+	{
+		let		i = 0;
+		let		user;
+
+		while (i < users.length)
+		{
+			user = await this.get("/users", { username: users[i].userName });
+			console.log(user);
+			users[i].id = user[0].id;
+			i++;
+		}
 	},
 
 	deleteProject: async function (projectID)

@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-02 21:47:58
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-02-02 23:17:56
+ * @ Modified time: 2020-02-11 01:32:41
  * @ Description:
  */
 
@@ -122,12 +122,12 @@ const courseWorkId = 61741339469;
 
 
 // create course callback
-function    courseWorkCreator(auth, resolve, reject)
+function    courseWorkCreator(auth, resolve, reject, conf)
 {
     const classroom = google.classroom({version: 'v1', auth});
 
     const courseWork = {
-        "title" : "Экзамен",
+        "title" : conf.title,
         "description" : "Экзамен по темам массивов и матриц",
         "materials" : [],
         'state' : 'PUBLISHED',
@@ -136,7 +136,7 @@ function    courseWorkCreator(auth, resolve, reject)
     }
 
     classroom.courses.courseWork.create({
-        courseId,
+        courseId: conf.courseId,
         requestBody: courseWork
     })
     .then(res => resolve(res))
@@ -145,7 +145,7 @@ function    courseWorkCreator(auth, resolve, reject)
 
 
 // get submission list callback
-function    submissionList(auth, resolve, reject)
+function    submissionList(auth, resolve, reject, courseId, courseWorkId)
 {
   const classroom = google.classroom({version: 'v1', auth});
   
@@ -159,7 +159,7 @@ function    submissionList(auth, resolve, reject)
 
 
 // get students list callback
-function    studentsList(auth, resolve, reject)
+function    studentsList(auth, resolve, reject, courseId)
 {
   const classroom = google.classroom({version: 'v1', auth});
     
@@ -183,13 +183,23 @@ function    setStudentGrade(auth, resolve, reject, conf)
 //getStudentId("dfan@miem.hse.ru");
 const   classroom = {
 
-
-    createCourseWork: async function (title)
+    setCourseId: function (courseId)
     {
+      this.courseId = courseId;
+    },
+
+    setCourseWorkId: function (id)
+    {
+      this.courseWorkId = id;
+    },
+
+    createCourseWork: async function (conf)
+    {
+        conf.courseId = this.courseId;
         await new Promise((resolve, reject) => {
-          authorize(credentials, (auth) => courseWorkCreator(auth, resolve, reject));
+          authorize(credentials, (auth) => courseWorkCreator(auth, resolve, reject, conf));
         })
-        .then(res => lib.logOut(res.data))
+        .then(res => conf.courseWorkId = res.data.id)
         .catch(err => lib.logOut(err));
     },
 
@@ -200,7 +210,7 @@ const   classroom = {
 
       lib.logOut("SUBMISSION LIST: ")
       await new Promise((resolve, reject) => {
-        authorize(credentials, (auth) => submissionList(auth, resolve, reject));
+        authorize(credentials, (auth) => submissionList(auth, resolve, reject, this.courseId, this.courseWorkId));
       })
       .then(res => subList = res.data.studentSubmissions)
       .catch(err => lib.logOut(err));
@@ -215,7 +225,7 @@ const   classroom = {
 
       lib.logOut("students LIST: ")
       await new Promise((resolve, reject) => {
-        authorize(credentials, (auth) => studentsList(auth, resolve, reject));
+        authorize(credentials, (auth) => studentsList(auth, resolve, reject, this.courseId));
       })
       .then(res => studentList = res.data.students)
       .catch(err => lib.logOut(err));
@@ -233,7 +243,7 @@ const   classroom = {
         studentList = await this.studentsList.call(this);
         lib.logOut("StudentList: ", studentList);
 
-        if (studentList.length > 0)
+        if (studentList && studentList.length > 0)
         {
           let     i = 0;
 
@@ -257,7 +267,7 @@ const   classroom = {
       subList = await this.studentSubList.call(this);
       //lib.logOut("SUBLIST: ", subList);
       
-      if (subList.length > 0)
+      if (subList && subList.length > 0)
       {
         let     i = 0;
 
@@ -287,8 +297,8 @@ const   classroom = {
           requestBody: {
             "assignedGrade" : points
           },
-          courseId,
-          courseWorkId,
+          courseId: this.courseId,
+          courseWorkId: this.courseWorkId,
           id: subId,
           ...updateMask
         }

@@ -2,24 +2,30 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-02-02 22:27:33
+ * @ Modified time: 2020-02-11 01:27:57
  * @ Description:
  */
 
 
-var http = require('./gitlab_scripts/http');
-var fs = require('fs');
-var global = require('./configs/global');
-var Grader = require('./grader_scripts/components/Grader');
-var lib = require('./lib');
+const	http = require('./gitlab_scripts/http');
+const	fs = require('fs');
+const	global = require('./configs/global');
+const	Grader = require('./grader_scripts/components/Grader');
+const	lib = require('./lib');
 const	zulip = require('./gitlab_scripts/zulip');
 const	classroom = require('./google_scripts/classroom');
 
 var			VARIANTS = JSON.parse(fs.readFileSync(`${global.GRADER.PATH}taskVariants.json`)).variants;
 
-var students = fs.readFileSync("./" + global.GITLAB_STUDENTS_INFO);
-students = JSON.parse(students).students;
-console.log(students);
+const	confFile = JSON.parse(fs.readFileSync("./" + global.GITLAB_STUDENTS_INFO));
+const	students = confFile.students;
+
+console.log(confFile);
+classroom.setCourseId(confFile.courseId);
+classroom.setCourseWorkId(confFile.courseWorkId);
+
+console.log(classroom.courseId);
+console.log(classroom.courseWorkId);
 
 async function checkLastUpdate(student)
 {
@@ -60,6 +66,7 @@ async function checkRepo() {
 		let check = await checkLastUpdate(students[i])
 		variant = students[i].taskVariant;
 		taskCount = VARIANTS.taskCounts[variant - 1];
+		let	email = students[i].gmail;
 		if (check.status)
 		{
 			st = true;
@@ -67,7 +74,11 @@ async function checkRepo() {
 			
 			let		j = 0;
 			while (j < taskCount)
-				tasks.push(await http.getRepoFile(students[i].projectId, `code${++j}.c`));
+			{
+				let		content = await http.getRepoFile(students[i].projectId, `code${++j}.c`);
+				if (content)
+					tasks.push(content);
+			}
 			
 			if (tasks.length > 0) 
 			{
@@ -87,6 +98,8 @@ async function checkRepo() {
 					type: "private",
 					content: result
 				});
+
+				classroom.setGrade(email, Grader.getAssignedGrade());
 			}
 		}
 		i++;
@@ -100,8 +113,8 @@ async function run() {
 	console.log(students);
 	if (students)
 	{
-		await http.createProjectsForUsers(students);
-		fs.writeFileSync("./" + global.GITLAB_STUDENTS_INFO, JSON.stringify({students}));
+		//await http.createProjectsForUsers(students);
+		//fs.writeFileSync("./" + global.GITLAB_STUDENTS_INFO, JSON.stringify({students}));
 		let id = setInterval(checkRepo, 5000);
 	}
 
