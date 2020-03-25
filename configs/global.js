@@ -2,11 +2,13 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 21:41:30
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-02-10 23:28:20
+ * @ Modified time: 2020-03-25 23:02:23
  * @ Description:
  */
 
 var global = {
+	CONFIG_ID: '209',
+	VARIANT_CNT: 14,
 	GITLAB_DOMAIN: 'https://git.miem.hse.ru/api/v4',
 	GITLAB_ACCESS_TOKEN: 'ffVrpATDs77Q9xPtisM7',
 	GITLAB_PROJECT_NAME: 'exam',

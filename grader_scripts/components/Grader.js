@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-01 15:16:46
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-02-11 01:18:48
+ * @ Modified time: 2020-03-24 15:42:44
  * @ Description:
  */
 
@@ -18,7 +18,7 @@ const 		lib = require('../../lib')
 const Grader = {
 	variant: 1,
 	status: ["FAIL", "OK", "ERROR", "TIME_OUT"],
-	userOut: `./${global.GRADER.PATH}user_out`,
+	userOut: null,
 	valgrind: Valgrind,
 	trace: Trace,
 	localTrace: '',
@@ -41,6 +41,7 @@ const Grader = {
 	{
 		this.resultData = '';
 		this.results = [];
+		this.localTrace = '';
 		this.valgrind.reset();
 	},
 
@@ -91,7 +92,7 @@ const Grader = {
 		const { err, stdout, stderr } = await exec(command);
 		if (err)
 			return 0;
-		return 1;
+		return stdout;
 	},
 
 
@@ -124,11 +125,10 @@ const Grader = {
 
 	checkOutputs: async function (test)
 	{
-		var 	output = await fs.readFileSync(this.getTestPath(test, true));
-		var 	user_out = await fs.readFileSync(`./${global.GRADER.PATH}user_out`);
+		var 	output = fs.readFileSync(this.getTestPath(test, true));
+		var 	user_out = this.userOut.trim();
 
 		output = output.toString().trim();
-		user_out = user_out.toString().trim();
 
 		for (let i = 0; i < output.length; i++)
 			if (output[i] != user_out[i])
@@ -141,7 +141,7 @@ const Grader = {
 
 	executeBinary: async function(test, resolve)
 	{
-		await this.execute(`${this.valgrind.getCommand()} ./${global.GRADER.PATH}binary_${this.hash} \< ${this.getTestPath(test)} > ${this.userOut}`);
+		this.userOut = await this.execute(`${this.valgrind.getCommand()} ./${global.GRADER.PATH}binary_${this.hash} \< ${this.getTestPath(test)}`);
 		this.valgrind.checkLog();
 		if (await this.checkOutputs(test)) {
 			this.results.push(1);
@@ -163,6 +163,7 @@ const Grader = {
 			if (el == 1)
 				this.grades[task - 1] += testWeight;
 		});
+		console.log("GRADE: ", this.grades[task - 1]);
 		if (!this.valgrind.getStatus())
 			this.grades[task - 1] -= falls;
 		this.localTrace += '\n\t*УТЕЧКИ В ПАМЯТИ:' + this.valgrind.getLogs();
@@ -184,11 +185,12 @@ const Grader = {
 			let weight = this.weights.length > 0 ? this.weights[i] : defaultWeight;
 			console.log("WIEGHT: ", weight);
 			console.log("GRADES: ", this.grades[i]);
-			grade += (this.grades[i] * weight) / 100;
+			if (this.grades[i] && Number(weight))
+				grade += (this.grades[i] * weight) / 100;
 			i++;
 		}
 
-		return grade;
+		return Math.round(grade);
 	},
 
 	inOutTask: async function (task)

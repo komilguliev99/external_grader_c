@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-02-11 00:03:39
+ * @ Modified time: 2020-03-25 23:02:43
  * @ Description:
  */
 
@@ -26,11 +26,29 @@ var http = {
 			data = response.data;
 		})
 		.catch(function (error) {
-			console.log(error);
+			console.log(`error: post: -url: ${global.GITLAB_DOMAIN}${url}`);
+			console.log("Message", error.response.data.message);
 			data = error;
 		});
 
 		return data;
+	},
+
+	put: async function (url, params)
+	{
+		const	configs = {
+			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
+		};
+
+		axios.put(`${global.GITLAB_DOMAIN}${url}`, params, configs)
+		.then(function (response) {
+			//console.log(response.data);
+			data = response.data;
+		})
+		.catch(function (error) {
+			console.log(error);
+			data = error;
+		});
 	},
 
 	get: async function(url, params = {})
@@ -100,32 +118,49 @@ var http = {
 	{
 		let		result;
 
-		result = await this.post('/projects', { name: title });
-		return result.id;
+		if (!title)
+			console.log("error: title - can't find to create project");
+		else
+		{
+			console.log('project title: ', title);
+			result = await this.post('/projects', { name: title });
+			return result.id;
+		}
+		return null;
 	},
 
-	createProjectForUser: async function(user, projectName)
+	createProjectForUser: async function(user, projectName, limitTime)
 	{
-		let		projectId;
+		let		projectId = null;
 		
-		let		taskVariant = lib.rangeRandom(1, 23);
+		let		taskVariant = lib.rangeRandom(1, global.VARIANT_CNT);
 		let		filePath = `./gitlab_scripts/tasks/variant_${lib.getFormat(taskVariant)}.txt`;
 
+		console.log("Creating project for user : ", user.userName, " ...");
+
 		projectId = await this.createProject(projectName + '_' + user.userName);
-		this.uploadFile({projectId, filePath});
-		await this.post(`/projects/${projectId}/members`, {"user_id": user.id, "access_level": 40});
-		user.projectId = projectId;
-		user.taskVariant = taskVariant;
-		return projectId;
+		if (projectId)
+		{
+			this.uploadFile({projectId, filePath});
+			await this.post(`/projects/${projectId}/members`, {"user_id": user.userGitlabId, "access_level": 40});
+			user.projectId = projectId;
+			user.taskVariant = taskVariant;
+			user.createDate = Date.now();
+			user.lastUpdate = user.createDate;
+			user.limitTime = limitTime;
+			return projectId;
+		}
+		else
+			console.log("WARNING: project did not created!");
+		return null;
 	},
 
-	createProjectsForUsers: async function (users, projectName)
+	createProjectsForUsers: async function (users, projectName, limitTime)
 	{
 		for (let i = 0; i < users.length; i++)
 		{
 			let user = users[i];
-			if (!user.projectId)
-				await this.createProjectForUser(user, projectName);
+			await this.createProjectForUser(user, projectName, limitTime);
 		}
 
 		//console.log("PROJECTS: ", users);
@@ -141,7 +176,7 @@ var http = {
 		{
 			user = await this.get("/users", { username: users[i].userName });
 			console.log(user);
-			users[i].id = user[0].id;
+			users[i].userGitlabId = user[0].id;
 			i++;
 		}
 	},

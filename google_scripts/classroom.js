@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-02 21:47:58
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-02-11 01:32:41
+ * @ Modified time: 2020-03-25 22:04:03
  * @ Description:
  */
 
@@ -21,7 +21,13 @@ const SCOPES = [
     'https://www.googleapis.com/auth/classroom.rosters',
     'https://www.googleapis.com/auth/classroom.rosters.readonly',
     'https://www.googleapis.com/auth/classroom.profile.emails',
-    'https://www.googleapis.com/auth/classroom.profile.photos'
+    'https://www.googleapis.com/auth/classroom.profile.photos',
+    'https://www.googleapis.com/auth/admin.directory.group.readonly',
+    'https://www.googleapis.com/auth/admin.directory.group',
+    'https://www.googleapis.com/auth/admin.directory.user.readonly',
+    'https://www.googleapis.com/auth/admin.directory.user',
+    'https://www.googleapis.com/auth/admin.directory.orgunit',
+    'https://www.googleapis.com/auth/admin.directory.orgunit.readonly'
 ];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
@@ -131,7 +137,7 @@ function    courseWorkCreator(auth, resolve, reject, conf)
         "description" : "Экзамен по темам массивов и матриц",
         "materials" : [],
         'state' : 'PUBLISHED',
-        'maxPoints' : 100,
+        'maxPoints' : conf.points ? conf.points : 100,
         'workType' : 'ASSIGNMENT'
     }
 
@@ -193,9 +199,10 @@ const   classroom = {
       this.courseWorkId = id;
     },
 
-    createCourseWork: async function (conf)
+    createCourseWork: async function (config, courseId)
     {
-        conf.courseId = this.courseId;
+        let conf = { ...config };
+        conf.courseId = courseId;
         await new Promise((resolve, reject) => {
           authorize(credentials, (auth) => courseWorkCreator(auth, resolve, reject, conf));
         })

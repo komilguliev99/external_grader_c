@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-24 08:01:44
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-02-11 00:56:24
+ * @ Modified time: 2020-03-25 22:16:41
  * @ Description:
  */
 
@@ -22,6 +22,9 @@ var		lib = {
 	{
 		if (logPerm)
 			console.log(...logs);
+	},
+	sleep: function (ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 }
 

@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start" : "node index.js",
-    "create" : "node createProjects.js"
+    "start": "node index.js",
+    "create": "node manage_scripts/create_projects.js",
+    "delete": "node manage_scripts/delete_projects.js"
   },
   "repository": {
     "type": "git",
@@ -20,8 +21,15 @@
   "homepage": "https://github.com/KomilGuliev/grader_node_js#readme",
   "dependencies": {
     "axios": "^0.19.2",
+    "coffee-register": "^2.2.0",
     "fs": "0.0.1-security",
+    "gapi": "0.0.3",
     "googleapis": "^39.2.0",
     "zulip-js": "^2.0.7"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "coffeescript": "^2.5.1"
   }
 }

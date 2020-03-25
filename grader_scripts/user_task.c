@@ -1,22 +1,31 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "stdio.h"
 
 int		main(void)
 {
-	int		matrix[100][100];
-	int		n, m, i = 0, j = 0;
-	int		result = 0;
+	int		a[200000];
+	int		n, x, i, cnt = 0;;
+	float		amg = 0;
 
 	scanf("%d", &n);
-	scanf("%d", &m);
-
-	for (i = 0; i < n; i++)
-		for (j = 0; j < m; j++)
-			scanf("%d", &matrix[i][j]);
-	for (i = 0; i < n; i++)
-		for (j = 0; j < m; j++)
-			if (i % 2 == 1 && matrix[i][j] % 2 == 0)
-				result += matrix[i][j];		
-	printf("%d", result);
+	i = 0;
+	while (i < n)
+	{
+		scanf("%d", &x);
+		a[i] = x;
+		if (x % 2 == 1 || x == 0)
+		{
+			amg += x;
+			cnt++;
+		}
+		i++;
+	}
+	amg /= cnt;
+	i = 0;
+	while (i < n)
+	{
+		if (a[i] <= amg)
+			printf("%d ", a[i]);
+		i++;
+	}
 	return (0);
 }
