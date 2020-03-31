@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-02 21:47:58
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-31 13:24:30
+ * @ Modified time: 2020-04-01 01:22:17
  * @ Description:
  */
 
@@ -253,13 +253,13 @@ const   classroom = {
     },
 
 
-    studentSubList: async function ()
+    studentSubList: async function (courseId, courseWorkId)
     {
       let     subList;
 
       lib.logOut("SUBMISSION LIST: ")
       await new Promise((resolve, reject) => {
-        authorize(credentials, (auth) => submissionList(auth, resolve, reject, this.courseId, this.courseWorkId));
+        authorize(credentials, (auth) => submissionList(auth, resolve, reject, courseId, courseWorkId));
       })
       .then(res => subList = res.data.studentSubmissions)
       .catch(err => lib.logOut(err));
@@ -284,12 +284,12 @@ const   classroom = {
     },
 
 
-    getStudentId: async function (email)
+    getStudentId: async function (email, courseId)
     {
         let     studentId = null;
         let     studentList = null;
 
-        studentList = await this.studentsList.call(this);
+        studentList = await this.studentsList.call(this, courseId);
         lib.logOut("StudentList: ", studentList);
 
         if (studentList && studentList.length > 0)
@@ -309,11 +309,11 @@ const   classroom = {
         return null;
     },
 
-    getSubId: async function (userId)
+    getSubId: async function (userId, courseId, courseWorkId)
     {
       let     subList = null;
 
-      subList = await this.studentSubList.call(this);
+      subList = await this.studentSubList.call(this, courseId, courseWorkId);
       //lib.logOut("SUBLIST: ", subList);
       
       if (subList && subList.length > 0)
@@ -330,24 +330,24 @@ const   classroom = {
       return null;
     },
 
-    setGrade: async function (email, points)
+    setGrade: async function (email, points, courseId, courseWorkId)
     {
       let     subId;
-      let     userId = await this.getStudentId.call(this, email);
+      let     userId = await this.getStudentId.call(this, email, courseId);
       let     updateMask = {'updateMask' : 'assignedGrade'};
 
       lib.logOut("USER_ID: ", userId);
       if (userId)
       {
-        subId = await this.getSubId.call(this, userId);
+        subId = await this.getSubId.call(this, userId, courseId, courseWorkId);
         lib.logOut("SetGrade: subId: ", subId);
 
         let conf = {
           requestBody: {
             "assignedGrade" : points
           },
-          courseId: this.courseId,
-          courseWorkId: this.courseWorkId,
+          courseId: courseId,
+          courseWorkId: courseWorkId,
           id: subId,
           ...updateMask
         }

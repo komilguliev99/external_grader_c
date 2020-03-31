@@ -2,11 +2,11 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-10 23:21:24
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-31 13:22:55
+ * @ Modified time: 2020-04-01 00:33:20
  * @ Description:
  */
 
-const	http = require('../gitlab_scripts/http');
+const	gitlab = require('../gitlab_scripts/gitlab');
 const	fs = require('fs');
 const	global = require('../configs/global');
 const	lib = require('../lib');
@@ -26,18 +26,18 @@ gapi.class.setCourseId(conf.courseId);
 
 async function      read_students_info()
 {
-    let content = await http.getRepoFile(global.CONFIG_ID, 'students.json');
+    let content = await gitlab.getRepoFile(global.CONFIG_ID, 'students.json');
     return (JSON.parse(content).students);
 }
 
 async function prepare_configs()
 {
-	confFile = JSON.parse(await http.getRepoFile(global.CONFIG_ID, 'projects.json'));
+	confFile = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'projects.json'));
 	projects = confFile.projects;
 	if (!projects)
 		throw "there is no projects for testing!"
 
-	global.TASKS_INFO = JSON.parse(await http.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
+	global.TASKS_INFO = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
 	if (!global.TASKS_INFO)
 		throw "there is no task variants for checking!";
 	VARIANTS = global.TASKS_INFO;
@@ -57,8 +57,8 @@ async function    createGitlabProjects(students, flags)
             students[i].group = flags.group;
         i++;
     }
-    await http.setUsersID(students);
-    await http.createProjectsForUsers(students, flags);
+    await gitlab.setUsersID(students);
+    await gitlab.createProjectsForUsers(students, flags);
 }
 
 //createGitlabProjects();
@@ -148,7 +148,7 @@ async function      create()
         await prepare_configs();
         await createGitlabProjects(students, flags);
     
-        let projects = JSON.parse(await http.getRepoFile(global.CONFIG_ID, "projects.json")).projects;
+        let projects = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, "projects.json")).projects;
     
         const   params = {
             branch: 'master',
@@ -156,7 +156,7 @@ async function      create()
             'commit_message': 'created new projects'
         };
     
-        http.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+        gitlab.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
     }
 }
 

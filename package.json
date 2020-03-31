@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "create": "node manage_scripts/create_projects.js",
-    "delete": "node manage_scripts/delete_projects.js"
+    "delete": "node manage_scripts/delete_projects.js",
+    "get": "node manage_scripts/get_projects.js"
   },
   "repository": {
     "type": "git",

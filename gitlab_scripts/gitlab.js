@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-31 13:34:48
+ * @ Modified time: 2020-04-01 00:32:50
  * @ Description:
  */
 
@@ -11,7 +11,7 @@ var fs = require('fs');
 var global = require('../configs/global');
 var lib = require('../lib');
 
-var http = {
+var gitlab = {
 	post: async function (url, params)
 	{	
 		var		data;
@@ -243,4 +243,4 @@ var http = {
 	}
 };
 
-module.exports = http;
+module.exports = gitlab;

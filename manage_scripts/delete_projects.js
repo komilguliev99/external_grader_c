@@ -2,11 +2,11 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-19 15:14:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-30 23:53:43
+ * @ Modified time: 2020-04-01 00:33:35
  * @ Description:
  */
 
-const		http = require('../gitlab_scripts/http');
+const		gitlab = require('../gitlab_scripts/gitlab');
 const		global = require('../configs/global')
 const		args = process.argv.slice(2);
 
@@ -47,7 +47,7 @@ async function		getProjects()
 {
 	let		content;
 
-	content = JSON.parse(await	http.getRepoFile(global.CONFIG_ID, "projects.json"));
+	content = JSON.parse(await	gitlab.getRepoFile(global.CONFIG_ID, "projects.json"));
 	if (!content)
 		return false;
 	else
@@ -92,7 +92,7 @@ async function		deleteProjects()
 
 	if (flags.ignore)
 	{
-		http.deleteProjects(flags.prIds);
+		gitlab.deleteProjects(flags.prIds);
 		return 0;
 	}
 
@@ -137,7 +137,7 @@ async function		deleteProjects()
 
 	projects = projects.filter(el => {
 		if (el.projectId)
-			http.deleteProject(el.projectId);
+			gitlab.deleteProject(el.projectId);
 	});
 
 	const   params = {
@@ -146,7 +146,7 @@ async function		deleteProjects()
 		'commit_message': 'created new projects'
 	};
 
-	http.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+	gitlab.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
 
 	showProjects(projects);
 
