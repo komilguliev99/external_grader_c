@@ -4,7 +4,6 @@
   "description": "Grader for C programming tasks",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "create": "node manage_scripts/create_projects.js",
     "delete": "node manage_scripts/delete_projects.js"
@@ -24,6 +23,7 @@
     "coffee-register": "^2.2.0",
     "fs": "0.0.1-security",
     "gapi": "0.0.3",
+    "gapi-client": "0.0.3",
     "googleapis": "^39.2.0",
     "zulip-js": "^2.0.7"
   },

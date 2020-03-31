@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-25 23:02:43
+ * @ Modified time: 2020-03-31 13:34:48
  * @ Description:
  */
 
@@ -129,16 +129,15 @@ var http = {
 		return null;
 	},
 
-	createProjectForUser: async function(user, projectName, limitTime)
+	createProjectForUser: async function(user, flags, taskVariant)
 	{
 		let		projectId = null;
 		
-		let		taskVariant = lib.rangeRandom(1, global.VARIANT_CNT);
 		let		filePath = `./gitlab_scripts/tasks/variant_${lib.getFormat(taskVariant)}.txt`;
 
 		console.log("Creating project for user : ", user.userName, " ...");
 
-		projectId = await this.createProject(projectName + '_' + user.userName);
+		projectId = await this.createProject(flags.gitPrefix + '_' + user.userName);
 		if (projectId)
 		{
 			this.uploadFile({projectId, filePath});
@@ -147,23 +146,47 @@ var http = {
 			user.taskVariant = taskVariant;
 			user.createDate = Date.now();
 			user.lastUpdate = user.createDate;
-			user.limitTime = limitTime;
+			user.limit = flags.limit;
+			user.taskType = flags.taskType;
+			user.cwId = flags.cwId;
+			user.courseId = flags.courseId;
+			user.courseTitle = flags.courseTitle;
+			user.cwTitle = flags.cwTitle;
 			return projectId;
 		}
 		else
-			console.log("WARNING: project did not created!");
+			console.log("WARNING: project did not created for user: ", user.userName);
 		return null;
 	},
 
-	createProjectsForUsers: async function (users, projectName, limitTime)
+	createProjectsForUsers: async function (users, flags)
 	{
+		let		tasks = [];
+		let		types = global.TASKS_INFO.types;
+
+		if (flags.taskType)
+			types.forEach((type, i) => {
+				if (type.length == 1 && type[0] == flags.taskType)
+					tasks.push(i);
+			})
+		else
+			types.forEach((type, i) => tasks.push(i));
+
 		for (let i = 0; i < users.length; i++)
 		{
 			let user = users[i];
-			await this.createProjectForUser(user, projectName, limitTime);
+
+			if (flags.taskVariant && (Number(flags.taskVariant) <= types.length
+										&& Number(flags.taskVariant) > 0))
+				await this.createProjectForUser(user, flags, flags.taskVariant);
+			else
+			{
+				let ind = lib.rangeRandom(0, tasks.length - 1);
+				await this.createProjectForUser(user, flags, tasks[ind])	
+			}
 		}
 
-		//console.log("PROJECTS: ", users);
+		console.log("PROJECTS: ", users);
 	},
 
 
@@ -193,7 +216,7 @@ var http = {
 			data = response.data;
 		})
 		.catch(function (error) {
-			console.log(error);
+			//console.log(error);
 			data = error;
 		});
 		console.log("Deleted");

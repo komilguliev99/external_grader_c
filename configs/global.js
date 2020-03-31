@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 21:41:30
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-25 23:02:23
+ * @ Modified time: 2020-03-29 19:48:47
  * @ Description:
  */
 
@@ -40,10 +40,12 @@ var global = {
 		}
 	},
 
+	TASKS_INFO: null,
+
 	CLASSROOM: {
 		COURSEWORK: "Экзамен"
-	}
-	
+	},
+	GOOGLE_API_KEY: 'AIzaSyBp-AIzaSyAaqI7gI-3rqlyVnMld5qo-4sLKCzIe0OM'	
 }
 
 module.exports = global;

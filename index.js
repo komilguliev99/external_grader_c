@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-25 23:24:04
+ * @ Modified time: 2020-03-29 19:49:33
  * @ Description:
  */
 
@@ -13,7 +13,7 @@ const	global		= require('./configs/global');
 const	Grader		= require('./grader_scripts/components/Grader');
 const	lib			= require('./lib');
 const	zulip		= require('./gitlab_scripts/zulip');
-const	classroom	= require('./google_scripts/classroom');
+const	gapi	= require('./google_scripts/classroom');
 
 const	defaultCourseId = 56269545514;
 
@@ -31,9 +31,10 @@ async function prepare_configs()
 	if (!projects)
 		throw "there is no projects for testing!"
 
-	VARIANTS = JSON.parse(await http.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
-	if (!VARIANTS)
+	global.TASKS_INFO = JSON.parse(await http.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
+	if (!global.TASKS_INFO)
 		throw "there is no task variants for checking!";
+	VARIANTS = global.TASKS_INFO;
 }
 
 async function checkLastUpdate(student)
@@ -112,7 +113,7 @@ async function checkRepo() {
 				});
 				console.log("GRRRRRRRR: ", Grader.getAssignedGrade());
 				if (new Date(projects[i].lastUpdate) - new Date(projects[i].createdDate) <= projects[i].limitTime)
-					classroom.setGrade(email, Grader.getAssignedGrade());
+					gapi.class.setGrade(email, Grader.getAssignedGrade());
 			}
 		}
 		i++;
@@ -135,8 +136,8 @@ async function run() {
 	
 	try {
 		await prepare_configs();
-		classroom.setCourseId(confFile.courseId);
-		classroom.setCourseWorkId(confFile.courseWorkId);
+		gapi.class.setCourseId(confFile.courseId);
+		gapi.class.setCourseWorkId(confFile.courseWorkId);
 		
 		let id = setInterval(checkRepo, 5000);
 	} catch (err)

@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-02 21:47:58
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-25 22:04:03
+ * @ Modified time: 2020-03-31 13:24:30
  * @ Description:
  */
 
@@ -10,9 +10,13 @@ const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
 const lib = require('../lib');
+const axios = require('axios');
+const global = require('../configs/global');
+
 
 // If modifying these scopes, delete token.json.
 const SCOPES = [
+    'https://www.googleapis.com/auth/classroom.courses',
     'https://www.googleapis.com/auth/classroom.courses.readonly',
     'https://www.googleapis.com/auth/classroom.coursework.students',
     'https://www.googleapis.com/auth/classroom.coursework.students.readonly',
@@ -64,6 +68,19 @@ function authorize(credentials, callback) {
     if (err) return getNewToken(oAuth2Client, callback);
     oAuth2Client.setCredentials(JSON.parse(token));
     callback(oAuth2Client);
+  });
+}
+
+function authorize2(credentials, callback) {
+  const {client_secret, client_id, redirect_uris} = credentials.installed;
+  const oauth2Client = new google.auth.OAuth2(
+      client_id, client_secret, redirect_uris[0]);
+
+  // Check if we have previously stored a token.
+  fs.readFile(TOKEN_PATH, (err, token) => {
+    if (err) return getNewToken(oauth2Client, callback);
+    oauth2Client.credentials = JSON.parse(token);
+    callback(oauth2Client);
   });
 }
 
@@ -188,7 +205,6 @@ function    setStudentGrade(auth, resolve, reject, conf)
 
 //getStudentId("dfan@miem.hse.ru");
 const   classroom = {
-
     setCourseId: function (courseId)
     {
       this.courseId = courseId;
@@ -197,6 +213,31 @@ const   classroom = {
     setCourseWorkId: function (id)
     {
       this.courseWorkId = id;
+    },
+
+    createCourse: async function (config = {})
+    {
+      let   courseId = null;
+
+      if (!config.ownerId)
+        config.ownerId = "me";
+      if (!config.name)
+        console.log("Required name of course!");
+      else
+      {
+        await new Promise((resolve, reject) => {
+          authorize(credentials, auth => {
+            const classroom = google.classroom({version: 'v1', auth});
+            
+            classroom.courses.create({ requestBody: config })
+            .then(res => resolve(res.data))
+            .catch(err => reject(err));
+          });
+        })
+        .then(res => courseId = res.id)
+        .catch(err => console.log(err));
+      }
+      return courseId;
     },
 
     createCourseWork: async function (config, courseId)
@@ -208,6 +249,7 @@ const   classroom = {
         })
         .then(res => conf.courseWorkId = res.data.id)
         .catch(err => lib.logOut(err));
+        return conf.courseWorkId;
     },
 
 
@@ -226,13 +268,13 @@ const   classroom = {
     },
 
 
-    studentsList: async function ()
+    studentsList: async function (courseId)
     {
       let       studentList = null;
 
       lib.logOut("students LIST: ")
       await new Promise((resolve, reject) => {
-        authorize(credentials, (auth) => studentsList(auth, resolve, reject, this.courseId));
+        authorize(credentials, (auth) => studentsList(auth, resolve, reject, courseId));
       })
       .then(res => studentList = res.data.students)
       .catch(err => lib.logOut(err));
@@ -320,4 +362,113 @@ const   classroom = {
     }
 }
 
-module.exports = classroom;
+const   directory = {
+
+  getOrgUnitPath: function (group)
+  {
+    let     path = null;
+    let     prefix = group.slice(0, 3);
+
+    if (prefix == 'БИВ')
+      path = 'ИВТ';
+    else if (prefix == 'БИБ')
+      path = 'ИБ';
+    else if (prefix == 'БИТ')
+      path = 'ИТСС';
+    else if (prefix == 'БПМ')
+      path = 'ПМ';
+
+    if (path)
+      return `orgUnitPath='/Образовательные программы/Бакалавриат/${path}/${group}'`;
+    else
+      return null;
+  },
+
+  getUsers: function (result)
+  {
+    let   users = [];
+    result.data.users.forEach(user => {          
+      let   i = 0;
+      while (user.emails.length > i)
+      {
+        if (user.emails[i].primary)
+        {
+          users.push({ 
+            gmail: user.emails[i].address,
+            name: user.name.givenName
+          });
+          break ;
+        }
+        i++;
+      }
+    });
+    return users;
+  },
+
+  getGroupByGmail: async function (gmail)
+  {
+    let   result;
+    let   params = {
+      domain: "miem.hse.ru",
+      query: `email=${gmail}`
+    };
+
+    await new Promise((resolve, reject) => {
+      authorize(credentials, (auth) => {
+        const service = google.admin({version: 'directory_v1', auth});
+        service.users.list(params)
+        .then(res => resolve(res))
+        .catch(err => reject(err));
+      })
+    })
+    .then (res => result = res)
+    .catch(err => console.log("ERRROR\n", err));
+
+    if (!result || !result.data || !result.data.users)
+      return false;
+    else
+    {
+      let items = result.data.users[0].orgUnitPath.split('/');
+      return items[items.length - 1];
+    }
+
+  },
+
+  getGroup: async function (group)
+  {
+    let     orgUnitPath = this.getOrgUnitPath(group);
+    let     result = null;
+    
+    if (orgUnitPath)
+    {
+      let   params = {
+        domain: "miem.hse.ru",
+        query: orgUnitPath
+      };
+
+      await new Promise((resolve, reject) => {
+        authorize(credentials, (auth) => {
+          const service = google.admin({version: 'directory_v1', auth});
+          service.users.list(params)
+          .then(res => resolve(res))
+          .catch(err => reject(err));
+        })
+      })
+      .then (res => result = res)
+      .catch(err => console.log("ERRROR\n", err));
+
+      if (result)
+        return this.getUsers(result);
+      else
+        return null;
+      
+    } else
+    {
+      console.log("No such group!");
+      return false;
+    }
+  }
+}
+
+module.exports.class = classroom;
+module.exports.directory = directory;

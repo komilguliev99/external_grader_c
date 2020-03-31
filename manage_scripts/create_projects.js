@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-10 23:21:24
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-25 22:44:23
+ * @ Modified time: 2020-03-31 13:22:55
  * @ Description:
  */
 
@@ -10,15 +10,19 @@ const	http = require('../gitlab_scripts/http');
 const	fs = require('fs');
 const	global = require('../configs/global');
 const	lib = require('../lib');
-const	classroom = require('../google_scripts/classroom');
+const	gapi = require('../google_scripts/classroom');
 
 const   args = process.argv.slice(2);
+var   projects = [];
+
+var		VARIANTS	=null;
+var		confFile	=null;
 
 var     students;
 const   conf = {
-    courseId: 56269545514
+    courseId: 57365570536
 };
-classroom.setCourseId(conf.courseId);
+gapi.class.setCourseId(conf.courseId);
 
 async function      read_students_info()
 {
@@ -26,18 +30,35 @@ async function      read_students_info()
     return (JSON.parse(content).students);
 }
 
-async function    createGitlabProjects(title, courseId, limitTime)
+async function prepare_configs()
+{
+	confFile = JSON.parse(await http.getRepoFile(global.CONFIG_ID, 'projects.json'));
+	projects = confFile.projects;
+	if (!projects)
+		throw "there is no projects for testing!"
+
+	global.TASKS_INFO = JSON.parse(await http.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
+	if (!global.TASKS_INFO)
+		throw "there is no task variants for checking!";
+	VARIANTS = global.TASKS_INFO;
+}
+
+async function    createGitlabProjects(students, flags)
 {
     let         i = 0;
 
     while (i < students.length)
     {
         students[i].userName = students[i].gmail.slice(0, students[i].gmail.indexOf('@'));
-        students[i].courseId = courseId;
+        students[i].courseId = flags.courseId;
+        students[i].cwId = flags.cwId;
+        students[i].cwTitle = flags.cwTitle;
+        if (flags.group)
+            students[i].group = flags.group;
         i++;
     }
     await http.setUsersID(students);
-    await http.createProjectsForUsers(students, title, limitTime);
+    await http.createProjectsForUsers(students, flags);
 }
 
 //createGitlabProjects();
@@ -45,52 +66,98 @@ async function    createGitlabProjects(title, courseId, limitTime)
 async function      createCourseWork(title)
 {
     conf.title = title;
-    await classroom.createCourseWork(conf, conf.courseId);
-    let         list = await classroom.studentsList();
+    await gapi.class.createCourseWork(conf, conf.courseId);
+    let         list = await gapi.class.studentsList();
 
     if (!list)
         console.log("WARNING: no students registered in course!");
 }
 
-async function      create()
+function            setFlags(flags)
 {
-    let     git_pref = "exam";
-    let     task_title = "Экзамен";
-    let     flags = {};
-    let     group = null;
-    let     courseId = conf.courseId;
-    let     limitTime = 3600 * 1000;
-
     let     i = -1;
     while (args[++i])
-        if (args[i] == '--re')
-            flags['re'] = 1;
-        else if (args[i].split('=')[0] == '--git_prefix')
-            git_pref = args[i].split('=')[1];
-        else if (args[i].split('=')[0] == '--task_title')
-            task_title = args[i].split('=')[1];
-        else if (args[i].split('=')[0] == '--group')
-            group = args[i].split('=')[1];
-        else if (args[i].split('=')[0] == '--course_id')
-            courseId = args[i].split('=')[1];
-        else if (args[i].split('=')[0] == '--limit_time')
-            limitTime = Number(args[i].split('=')[1]) * 1000;
-    
-    // reading students info
-    students = await read_students_info();
+    {
+        let     item = args[i].split('=');
 
-    await createGitlabProjects(git_pref, courseId, limitTime);
-    await  createCourseWork(task_title, courseId);
+        if (item[0] == '--course-id' && item[1])
+            flags.courseId = item[1];
+        else if (item[0] == '--git-prefix' && item[1])
+            flags.gitPrefix = item[1];
+        else if (item[0] == '--gmail' && item[1])
+            flags.gmail = item[1];
+        else if (item[0] == '--task-variant' && item[1])
+            flags.taskVariant = Number(item[1]);
+        else if (item[0] == '--task-type' && item[1])
+            flags.taskType = item[1];
+        else if (item[0] == '--group' && item[1])
+            flags.group = item[1];
+        else if (item[0] == '--limit' && Number(item[1]))
+            flags.limit = Number(item[1]) * 1000;
+        else if (item[0] == '--course-title' && item[1])
+            flags.courseTitle = item[1];
+        else if (item[0] == '--cw-id' && item[1])
+            flags.cwId = item[1];
+        else if (item[0] == '--cw-title' && item[1])
+            flags.cwTitle = item[1];
+    }
+}
 
-    console.log(students);
-
-    const   params = {
-        branch: 'master',
-        content: JSON.stringify({ projects: students}),
-        'commit_message': 'created new projects'
+async function      create()
+{
+    const   flags = {
+        gitPrefix: "exam",
+        cwTitle: "Экзамен",
+        limit: 3600 * 1000,
+        courseId: null,
+        taskType: null,
+        defaultType: 1
     };
 
-    http.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+    let         error = 0;
+
+    setFlags(flags);
+
+    // reading students info
+    if (flags.gmail)
+    {
+        let     group = await gapi.directory.getGroupByGmail(flags.gmail);
+        students = [{gmail: flags.gmail, group}];
+    }
+    else if (flags.group)
+        students = await gapi.directory.getGroup(flags.group);
+
+    console.log("FLAGS: ", flags);
+    if (students.length && !error)
+    {
+        // creating course at classroom
+        if (flags.courseTitle && !flags.courseId)
+            flags.courseId = await gapi.class.createCourse({ name: flags.courseTitle});
+        else
+            flags.courseId = conf.courseId;
+        
+        // creating course work
+        if (!flags.cwId)
+            flags.cwId = await gapi.class.createCourseWork({
+                title: flags.cwTitle},
+                flags.courseId
+            );  
+        else 
+            flags.cwId = flags.cwId;
+
+        await prepare_configs();
+        await createGitlabProjects(students, flags);
+    
+        let projects = JSON.parse(await http.getRepoFile(global.CONFIG_ID, "projects.json")).projects;
+    
+        const   params = {
+            branch: 'master',
+            content: JSON.stringify({ projects: [...students, ...projects]}),
+            'commit_message': 'created new projects'
+        };
+    
+        http.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+    }
 }
 
 create();
