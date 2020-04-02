@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-10 23:21:24
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-01 00:33:20
+ * @ Modified time: 2020-04-02 17:15:09
  * @ Description:
  */
 
@@ -35,11 +35,11 @@ async function prepare_configs()
 	confFile = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'projects.json'));
 	projects = confFile.projects;
 	if (!projects)
-		throw "there is no projects for testing!"
+		console.log("there is no projects for testing!");
 
 	global.TASKS_INFO = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
-	if (!global.TASKS_INFO)
-		throw "there is no task variants for checking!";
+    if (!global.TASKS_INFO)
+        console.log("there is no task variants for checking!");
 	VARIANTS = global.TASKS_INFO;
 }
 
@@ -106,7 +106,7 @@ function            setFlags(flags)
 async function      create()
 {
     const   flags = {
-        gitPrefix: "exam",
+        gitPrefix: Math.random().toString(36).substring(7),
         cwTitle: "Экзамен",
         limit: 3600 * 1000,
         courseId: null,
@@ -150,13 +150,22 @@ async function      create()
     
         let projects = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, "projects.json")).projects;
     
-        const   params = {
-            branch: 'master',
-            content: JSON.stringify({ projects: [...students, ...projects]}),
-            'commit_message': 'created new projects'
-        };
-    
-        gitlab.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+        if (projects)
+            projects = [...students, ...projects];
+        else
+            projects = students;
+        
+        if (confFile)
+        {
+            let     params = {
+                        branch: 'master',
+                        content: JSON.stringify({ projects }),
+                        'commit_message': 'created new projects'
+                    };
+            gitlab.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+        }
+        else
+            gitlab.uploadFile({ content: JSON.stringify({ projects }), path: "projects.json", projectId: global.CONFIG_ID });
     }
 }
 

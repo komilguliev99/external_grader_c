@@ -2,15 +2,15 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 21:41:30
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-29 19:48:47
+ * @ Modified time: 2020-04-02 13:28:17
  * @ Description:
  */
 
 var global = {
-	CONFIG_ID: '209',
+	CONFIG_ID: '335',
 	VARIANT_CNT: 14,
 	GITLAB_DOMAIN: 'https://git.miem.hse.ru/api/v4',
-	GITLAB_ACCESS_TOKEN: 'ffVrpATDs77Q9xPtisM7',
+	GITLAB_ACCESS_TOKEN: 'NzscasW5nsQwGpshCgEx',
 	GITLAB_PROJECT_NAME: 'exam',
 	GITLAB_STUDENTS_INFO: 'gitlab_scripts/students.json',
 	GITLAB_FILES: ['code1.c', 'code2.c'],

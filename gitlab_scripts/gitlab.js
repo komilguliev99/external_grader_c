@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-01 00:32:50
+ * @ Modified time: 2020-04-02 17:21:46
  * @ Description:
  */
 
@@ -76,8 +76,15 @@ var gitlab = {
 
 	uploadFile: async function (conf, branch = 'master', commitMessage = 'Initial state')
 	{
-		var		buff = fs.readFileSync(conf.filePath);
-		const	content = buff.toString();
+		var		buff, content;
+
+		if (!conf.content)
+		{
+			buff = fs.readFileSync(conf.filePath);
+			content = buff.toString();
+		}
+		else
+			content = conf.content;
 		const	params = {
 					branch: branch,
 					"commit_message": commitMessage,
@@ -87,7 +94,7 @@ var gitlab = {
 			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
 		};
 
-		await axios.post(`${global.GITLAB_DOMAIN}/projects/${conf.projectId}/repository/files/tasks.txt`, params, configs)
+		await axios.post(`${global.GITLAB_DOMAIN}/projects/${conf.projectId}/repository/files/${conf.path}`, params, configs)
 		.then(function (response) {
 			console.log(response.data);
 		})
@@ -140,7 +147,7 @@ var gitlab = {
 		projectId = await this.createProject(flags.gitPrefix + '_' + user.userName);
 		if (projectId)
 		{
-			this.uploadFile({projectId, filePath});
+			this.uploadFile({projectId, filePath, path: "tasks.txt"});
 			await this.post(`/projects/${projectId}/members`, {"user_id": user.userGitlabId, "access_level": 40});
 			user.projectId = projectId;
 			user.taskVariant = taskVariant;
@@ -171,17 +178,27 @@ var gitlab = {
 			})
 		else
 			types.forEach((type, i) => tasks.push(i));
+		
+		if (!tasks.length)
+		{
+			console.log("No variants with given type!");
+			return ;
+		}
 
 		for (let i = 0; i < users.length; i++)
 		{
 			let user = users[i];
+
+			if (!user.userGitlabId)
+				continue ;
 
 			if (flags.taskVariant && (Number(flags.taskVariant) <= types.length
 										&& Number(flags.taskVariant) > 0))
 				await this.createProjectForUser(user, flags, flags.taskVariant);
 			else
 			{
-				let ind = lib.rangeRandom(0, tasks.length - 1);
+				let ind = lib.rangeRandom(1, tasks.length);
+				console.log(ind, tasks);
 				await this.createProjectForUser(user, flags, tasks[ind])	
 			}
 		}
@@ -199,7 +216,10 @@ var gitlab = {
 		{
 			user = await this.get("/users", { username: users[i].userName });
 			console.log(user);
-			users[i].userGitlabId = user[0].id;
+			if (user[0])
+				users[i].userGitlabId = user[0].id;
+			else
+				console.log("no gitlab user for ", users[i].userName);
 			i++;
 		}
 	},

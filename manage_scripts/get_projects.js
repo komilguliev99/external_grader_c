@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-30 15:04:20
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-01 00:33:07
+ * @ Modified time: 2020-04-02 16:58:22
  * @ Description:
  */
 
@@ -18,7 +18,6 @@ function			setFlags(flags)
 	while (i < args.length)
 	{
 		let		item = args[i].split('=');
-		console.log(item);
 
 		if (item[0] == '--gmail' && item[1])
 			flags.gmail = item[1];
@@ -40,6 +39,14 @@ function			setFlags(flags)
 			flags.all = 1;
 		else if (item[0] == '--ignore')
 			flags.ignore = 1;
+		else if (item[0] == '--task-variant' && item[1])
+			flags.taskVariant = Number(item[1]);
+		else if (item[0] == '--no-prid')
+			flags.noPrId = 1;
+		else if (item[0] == '--no-course')
+			flags.noCourse = 1;
+		else if (item[0] == '--no-cw')
+			flags.noCw = 1;
 		i++;
 	}
 }
@@ -89,7 +96,6 @@ async function		getProjects()
 	}
 
 	fprojects = [...projects];
-	console.log("FLAGS: ", flags);
 
 	if (flags.ignore)
 	{
@@ -124,10 +130,24 @@ async function		getProjects()
 		
 		if (flags.cwTitle)
 			projects = projects.filter(el => el.cwTitle == flags.cwTitle);
+
+		if (flags.taskVariant)
+			projects = projects.filter(el => el.taskVariant == flags.taskVariant);
+
+		if (flags.noPrId)
+			projects = projects.filter(el => !el.projectId);
+		
+		if (flags.noCourse)
+			projects = projects.filter(el => !el.courseId);
+		
+		if (flags.noCw)
+			projects = projects.filter(el => !el.cwId);
 	}
 
-	showProjects(projects);
-
+	if (projects.length)
+		showProjects(projects);
+	else
+		console.log("There is no project with such params!");
 }
 
 getProjects();

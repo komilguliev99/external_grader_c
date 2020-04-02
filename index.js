@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-01 01:20:19
+ * @ Modified time: 2020-04-02 14:09:54
  * @ Description:
  */
 
@@ -25,26 +25,22 @@ var		projects	=null;
 async function prepare_configs()
 {
 	confFile = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'projects.json'));
-	console.log(confFile);
 	projects = confFile.projects;
-	console.log(projects)
 	if (!projects)
-		throw "there is no projects for testing!"
+		console.log("there is no projects for testing!");
 
 	global.TASKS_INFO = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
 	if (!global.TASKS_INFO)
-		throw "there is no task variants for checking!";
+		console.log("there is no task variants for checking!");
 	VARIANTS = global.TASKS_INFO;
 }
 
 async function checkLastUpdate(student)
 {
-	//console.log("BEFORE CHECKING: ", student);
 	let commits = await gitlab.commitList(student.projectId);
 	let lastUpdate;
 	if (commits && commits.length > 0)
 	{
-		//console.log(commits);
 		lastUpdate = commits[0]['committed_date'];
 
 		if (lastUpdate && (!student.lastUpdate || new Date(student.lastUpdate).getTime() < new Date(lastUpdate).getTime()))
@@ -60,28 +56,36 @@ async function checkLastUpdate(student)
 	return { status: false };
 }
 
+function			reset_grader(variant, tasks)
+{
+	Grader.reset();
+	taskCount = VARIANTS.taskCounts[variant - 1];
+	Grader.variant = variant;
+	Grader.taskFiles = tasks;
+	Grader.taskCount = taskCount;
+	Grader.types = VARIANTS.types[variant - 1];
+	Grader.weights = VARIANTS.weights[variant - 1];
+}
+
 async function checkRepo() {
 	let		i = 0, st = false;
 	let		variant;
 	let		taskCount = 0;
 	let		tasks = [];
 
-	while (i < projects.length)
+	await prepare_configs();
+	while (projects && i < projects.length)
 	{
-		//console.log(projects[i]);
 		Grader.reset();
 
 		let check = await checkLastUpdate(projects[i])
 		variant = projects[i].taskVariant;
-		taskCount = VARIANTS.taskCounts[variant - 1];
-		let	email = projects[i].gmail;
 		if (check.status)
 		{
 			st = true;
-			//console.log("GITLAB_FILES: ", global.GITLAB_FILES[0]);
 			
 			let		j = 0;
-			while (j < taskCount)
+			while (j < VARIANTS.taskCounts[variant - 1])
 			{
 				let		content = await gitlab.getRepoFile(projects[i].projectId, `code${++j}.c`);
 				console.log("CONTENT", content);
@@ -91,12 +95,7 @@ async function checkRepo() {
 			
 			if (tasks.length > 0) 
 			{
-				Grader.reset();
-				Grader.variant = variant;
-				Grader.taskFiles = tasks;
-				Grader.taskCount = taskCount;
-				Grader.types = VARIANTS.types[variant - 1];
-				Grader.weights = VARIANTS.weights[variant - 1];
+				reset_grader(variant, tasks);
 				await Grader.run();
 				let trace = Grader.getTrace();
 				let result = `Вы загрузили новые данные студент ${projects[i].userName}\nДата загрузки: ${new Date(projects[i].lastUpdate)} \n\n ${trace}\n`;
@@ -104,20 +103,19 @@ async function checkRepo() {
 				
 				console.log(result);
 				zulip.sendMessage({
-					to: `kzguliev@miem.hse.ru`,
+					to: "kzguliev@miem.hse.ru",		//projects[i].gmail
 					type: "private",
 					content: result
 				});
-				console.log("GRRRRRRRR: ", Grader.getAssignedGrade());
-				console.log(new Date(projects[i].createDate + projects[i].limit));
-				console.log(new Date());
 				if (new Date(projects[i].createDate + projects[i].limit) >= new Date())
 				{
 					console.log("Setting grade on classroom...");
-					gapi.class.setGrade(email, Grader.getAssignedGrade(), projects[i].courseId, projects[i].cwId);
+					gapi.class.setGrade(projects[i].gmail, Grader.getAssignedGrade(), projects[i].courseId, projects[i].cwId);
 				}
 			}
 		}
+		else
+			console.log("status: not updated!");
 		i++;
 	}
 	if (st)
@@ -134,20 +132,8 @@ async function checkRepo() {
 	}
 	else
 		console.log("No changes!");
+	await lib.sleep(10000);
+	checkRepo();
 }
 
-async function run() {
-	
-	try {
-		await prepare_configs();
-		gapi.class.setCourseId(confFile.courseId);
-		gapi.class.setCourseWorkId(confFile.courseWorkId);
-		
-		let id = setInterval(checkRepo, 5000);
-	} catch (err)
-	{
-		console.log("WARNING: ", err);
-	}
-}
-
-run();
+checkRepo();

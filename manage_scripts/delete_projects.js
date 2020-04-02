@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-19 15:14:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-01 00:33:35
+ * @ Modified time: 2020-04-02 17:12:29
  * @ Description:
  */
 
@@ -79,6 +79,13 @@ async function		deleteProjects()
 	// setting flags
 	setFlags(flags);
 
+	if (flags.ignore)
+	{
+		console.log(flags.prIds);	
+		gitlab.deleteProjects(flags.prIds);
+		return 0;
+	}
+
 	// reading projects info
 	projects = await getProjects()
 	if (!projects || !projects.length)
@@ -89,12 +96,6 @@ async function		deleteProjects()
 
 	fprojects = [...projects];
 	console.log("FLAGS: ", flags);
-
-	if (flags.ignore)
-	{
-		gitlab.deleteProjects(flags.prIds);
-		return 0;
-	}
 
 	//console.log(projects);
 
@@ -128,11 +129,10 @@ async function		deleteProjects()
 	fprojects = fprojects.filter(el => {
 		let		i = 0;
 		while (i < projects.length)
-			if (el.projectId == projects[i++].projectId || !el.projectId)
+			if (el.projectId == projects[i++].projectId)
 				return false;
 		
-		if (!projects.length)
-			return true;
+		return true;
 	})
 
 	projects = projects.filter(el => {
