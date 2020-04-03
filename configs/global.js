@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 21:41:30
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-02 13:28:17
+ * @ Modified time: 2020-04-03 14:26:46
  * @ Description:
  */
 
@@ -45,7 +45,11 @@ var global = {
 	CLASSROOM: {
 		COURSEWORK: "Экзамен"
 	},
-	GOOGLE_API_KEY: 'AIzaSyBp-AIzaSyAaqI7gI-3rqlyVnMld5qo-4sLKCzIe0OM'	
+	GOOGLE_API_KEY: 'AIzaSyBp-AIzaSyAaqI7gI-3rqlyVnMld5qo-4sLKCzIe0OM',
+	ADMIN: {
+		EMAIL: "c.grader2@miem.hse.ru",
+		NAME: "Комил"
+	}
 }
 
 module.exports = global;
