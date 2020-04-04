@@ -2,21 +2,27 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-10 23:21:24
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-02 17:15:09
+ * @ Modified time: 2020-04-04 13:01:50
  * @ Description:
  */
 
-const	gitlab = require('../gitlab_scripts/gitlab');
-const	fs = require('fs');
-const	global = require('../configs/global');
-const	lib = require('../lib');
-const	gapi = require('../google_scripts/classroom');
+const	gitlab      = require('../gitlab_scripts/gitlab');
+const	fs          = require('fs');
+const	gl          = require('../config/global');
+const	lib         = require('../config/lib');
+const	gapi        = require('../google_scripts/classroom');
 
 const   args = process.argv.slice(2);
 var   projects = [];
 
-var		VARIANTS	=null;
-var		confFile	=null;
+var		confFile	    = null;
+var     CONFIG_ID       = gl.external_configs.id;
+var     EXT_PR_INFO     = gl.external_configs.projects_info;
+var     EXT_TSK_INFO    = gl.external_configs.tasks_info;
+console.log(gl);
+
+if (!gl.external_configs.id)
+    console.log("Missing id of external configs!");
 
 var     students;
 const   conf = {
@@ -24,23 +30,18 @@ const   conf = {
 };
 gapi.class.setCourseId(conf.courseId);
 
-async function      read_students_info()
-{
-    let content = await gitlab.getRepoFile(global.CONFIG_ID, 'students.json');
-    return (JSON.parse(content).students);
-}
-
 async function prepare_configs()
 {
-	confFile = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'projects.json'));
-	projects = confFile.projects;
+    console.log(CONFIG_ID, EXT_PR_INFO, EXT_TSK_INFO);
+	confFile = JSON.parse(await gitlab.getRepoFile(CONFIG_ID, EXT_PR_INFO));
+    console.log(confFile);
+    projects = confFile.projects;
 	if (!projects)
 		console.log("there is no projects for testing!");
 
-	global.TASKS_INFO = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
-    if (!global.TASKS_INFO)
+	gl.tasks_info = JSON.parse(await gitlab.getRepoFile(CONFIG_ID, EXT_TSK_INFO)).variants;
+    if (!gl.tasks_info)
         console.log("there is no task variants for checking!");
-	VARIANTS = global.TASKS_INFO;
 }
 
 async function    createGitlabProjects(students, flags)
@@ -148,7 +149,7 @@ async function      create()
         await prepare_configs();
         await createGitlabProjects(students, flags);
     
-        let projects = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, "projects.json")).projects;
+        let projects = JSON.parse(await gitlab.getRepoFile(CONFIG_ID, EXT_PR_INFO)).projects;
     
         if (projects)
             projects = [...students, ...projects];
@@ -162,10 +163,10 @@ async function      create()
                         content: JSON.stringify({ projects }),
                         'commit_message': 'created new projects'
                     };
-            gitlab.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+            gitlab.put(`/projects/${CONFIG_ID}/repository/files/${EXT_PR_INFO}`, params);
         }
         else
-            gitlab.uploadFile({ content: JSON.stringify({ projects }), path: "projects.json", projectId: global.CONFIG_ID });
+            gitlab.uploadFile({ content: JSON.stringify({ projects }), path: EXT_PR_INFO, projectId: CONFIG_ID });
     }
 }
 

@@ -2,14 +2,14 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-24 12:56:54
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-03 14:38:18
+ * @ Modified time: 2020-04-04 13:17:49
  * @ Description:
  */
 
 const zulip = require('zulip-js');
 const path = require('path');
-const lib = require('../lib');
-const global = require('../configs/global');
+const lib = require('../config/lib');
+const global = require('../config/global');
 const zuliprc = path.resolve(__dirname, 'zuliprc');
 
 var		zlp = {
@@ -22,6 +22,8 @@ var		zlp = {
 	}
 }
 
+var		lastMessage;
+
 async function		messageHandler(data)
 {
 	if (data.result != 'success')
@@ -29,11 +31,17 @@ async function		messageHandler(data)
 		console.log("There is an error!")
 		return ;
 	}
-	else if (data.messages.length && global.ADMIN.EMAIL == data.messages[0].sender_email)
+	else if (lastMessage != data.messages[0].id &&
+		data.messages.length && global.admin.email == data.messages[0].sender_email)
 	{
-		let		content = data.messages[0].content;
-		content = content.slice(3, 5);
-		console.log(content);
+		let		message = data.messages[0].message;
+		if (message)
+		{
+			message = message.trim()
+			message = message.slice(3, message.length - 4);
+			//console.log(message);
+		}
+		lastMessage = data.messages[0].id;
 	}
 
 }

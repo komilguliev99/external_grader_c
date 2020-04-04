@@ -1,0 +1,41 @@
+{
+    "external_configs": {
+        "id": 335,
+        "tasks_info": "tasks_info.json",
+        "projects_info": "projects.json",
+        "admins": "admins.json"
+    },
+    "gitlab": {
+        "path": "gitlab_scripts/",
+        "domain": "https://git.miem.hse.ru/api/v4",
+        "access_token": "NzscasW5nsQwGpshCgEx"
+    },
+    "google": {
+        "path": "google_scripts/",
+        "credentials": "credentials.json",
+        "token": "token.json"
+    },
+    "grader": {
+        "path": "grader_scripts/",
+        "delete_binary": true,
+        "status": [ "FAIL", "OK", "ERROR", "TIME_OUT"]
+    },
+    "valgrind": {
+        "cmd": "valgrind",
+        "log_file": "valgrindLog",
+        "templates": {
+            "exist_leak": "%BYTES% байта %TYPE% утечек в %NUM% блоках",
+			"not_exist": "Нет %TYPE% утечек в программе",
+			"no_leaks": "Все блоки кучи были освобождены - утечки невозможны"
+        },
+        "leaks_messages": {
+            "definitely": "точных",
+			"indirectly": "косвенных",
+			"possibly": "возможных"
+        }
+    },
+    "admin": {
+        "email": "c.grader2@miem.hse.ru",
+        "fio": "Комил Гулиев"
+    }
+}

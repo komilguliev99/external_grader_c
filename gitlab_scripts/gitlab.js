@@ -2,31 +2,42 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-02 17:21:46
+ * @ Modified time: 2020-04-04 13:07:49
  * @ Description:
  */
 
 var axios = require('axios');
 var fs = require('fs');
-var global = require('../configs/global');
-var lib = require('../lib');
+var gl = require('../config/global');
+var lib = require('../config/lib');
 
 var gitlab = {
+	initConfigs: function ()
+	{
+		if (!gl.gitlab.access_token)
+			console.log("There is no token for gitlab API!");
+		if (!gl.gitlab.domain)
+			console.log("There is no domain for gitlab!");
+		this.access_token = gl.gitlab.access_token;
+		this.domain = gl.gitlab.domain;
+		this.path = gl.gitlab.path;
+	},
+
 	post: async function (url, params)
 	{	
 		var		data;
 		
 		const	configs = {
-					headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
+					headers: { "Authorization":` Bearer ${this.access_token}` }
 				};
 
-		await axios.post(`${global.GITLAB_DOMAIN}${url}`, params, configs)
+		await axios.post(`${this.domain}${url}`, params, configs)
 		.then(function (response) {
 			//console.log(response.data);
 			data = response.data;
 		})
 		.catch(function (error) {
-			console.log(`error: post: -url: ${global.GITLAB_DOMAIN}${url}`);
+			console.log(`error: post: -url: ${this.domain}${url}`);
 			console.log("Message", error.response.data.message);
 			data = error;
 		});
@@ -37,10 +48,10 @@ var gitlab = {
 	put: async function (url, params)
 	{
 		const	configs = {
-			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
+			headers: { "Authorization":` Bearer ${this.access_token}` }
 		};
 
-		axios.put(`${global.GITLAB_DOMAIN}${url}`, params, configs)
+		axios.put(`${this.domain}${url}`, params, configs)
 		.then(function (response) {
 			//console.log(response.data);
 			data = response.data;
@@ -53,15 +64,15 @@ var gitlab = {
 
 	get: async function(url, params = {})
 	{
-		let		paramsStr = '?access_token=' + global.GITLAB_ACCESS_TOKEN;
+		let		paramsStr = '?access_token=' + this.access_token;
 		let		data;
 		const	configs = {
-			headers: { "PRIVATE-TOKEN":`${global.GITLAB_ACCESS_TOKEN}` }
+			headers: { "PRIVATE-TOKEN":`${this.access_token}` }
 		};
 
 		Object.keys(params).forEach((key, i) =>	paramsStr += "&" + 	key + '=' + params[key]);
 
-		await axios.get(`${global.GITLAB_DOMAIN}${url}${paramsStr}`, configs)
+		await axios.get(`${this.domain}${url}${paramsStr}`, configs)
 		.then(function (response) {
 			data = response.data;
 			//console.log(response);
@@ -91,10 +102,10 @@ var gitlab = {
 					content
 				};
 		const	configs = {
-			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
+			headers: { "Authorization":` Bearer ${this.access_token}` }
 		};
 
-		await axios.post(`${global.GITLAB_DOMAIN}/projects/${conf.projectId}/repository/files/${conf.path}`, params, configs)
+		await axios.post(`${this.domain}/projects/${conf.projectId}/repository/files/${conf.path}`, params, configs)
 		.then(function (response) {
 			console.log(response.data);
 		})
@@ -169,7 +180,7 @@ var gitlab = {
 	createProjectsForUsers: async function (users, flags)
 	{
 		let		tasks = [];
-		let		types = global.TASKS_INFO.types;
+		let		types = gl.tasks_info.types;
 
 		if (flags.taskType)
 			types.forEach((type, i) => {
@@ -227,10 +238,10 @@ var gitlab = {
 	deleteProject: async function (projectID)
 	{
 		const	configs = {
-			headers: { "Authorization":` Bearer ${global.GITLAB_ACCESS_TOKEN}` }
+			headers: { "Authorization":` Bearer ${this.access_token}` }
 		};
 
-		await axios.delete(global.GITLAB_DOMAIN + '/projects/' + projectID, configs)
+		await axios.delete(this.domain + '/projects/' + projectID, configs)
 		.then(function (response) {
 			//console.log(response.data);
 			data = response.data;
@@ -262,5 +273,7 @@ var gitlab = {
 		return data;
 	}
 };
+
+gitlab.initConfigs();
 
 module.exports = gitlab;

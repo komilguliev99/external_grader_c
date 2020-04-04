@@ -2,13 +2,13 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-30 15:04:20
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-02 16:58:22
+ * @ Modified time: 2020-04-04 12:48:44
  * @ Description:
  */
 
 
 const		gitlab = require('../gitlab_scripts/gitlab');
-const		global = require('../configs/global')
+const		gl = require('../config/global')
 const		args = process.argv.slice(2);
 
 
@@ -55,7 +55,7 @@ async function		getConfigProjects()
 {
 	let		content;
 
-	content = JSON.parse(await	gitlab.getRepoFile(global.CONFIG_ID, "projects.json"));
+	content = JSON.parse(await	gitlab.getRepoFile(gl.external_configs.id, "projects.json"));
 	if (!content)
 		return false;
 	else

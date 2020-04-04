@@ -2,16 +2,15 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-02 21:47:58
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-01 01:22:17
+ * @ Modified time: 2020-04-04 12:54:54
  * @ Description:
  */
 
-const fs = require('fs');
-const readline = require('readline');
-const {google} = require('googleapis');
-const lib = require('../lib');
-const axios = require('axios');
-const global = require('../configs/global');
+const     fs        = require('fs');
+const     readline  = require('readline');
+const     {google}  = require('googleapis');
+const     lib       = require('../config/lib');
+const     gl        = require('../config/global');
 
 
 // If modifying these scopes, delete token.json.
@@ -36,7 +35,7 @@ const SCOPES = [
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = './google_scripts/token.json';
+const TOKEN_PATH = `${gl.google.path}${gl.google.token}`;
 const credentials = readCredentials();
 
 function readCredentials()
@@ -44,7 +43,7 @@ function readCredentials()
     let     content;
 
     try {
-        content = fs.readFileSync("./google_scripts/credentials.json");
+        content = fs.readFileSync(`${gl.google.path}${gl.google.credentials}`);
     } catch (error) {
         lib.logOut(error);
         return null;

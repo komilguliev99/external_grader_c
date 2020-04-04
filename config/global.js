@@ -2,11 +2,26 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 21:41:30
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-03 14:26:46
+ * @ Modified time: 2020-04-04 12:14:48
  * @ Description:
  */
 
-var global = {
+const		fs = require('fs');
+
+var			global = null;
+
+function	config_init()
+{
+	let		content = fs.readFileSync("./config/configs.json");
+	if (!content)
+	{
+		console.log("No cofiguration!");
+		console.log("Please, check your configuration, then restart service!");
+	}
+	else
+		global = JSON.parse(content);
+}
+var global2 = {
 	CONFIG_ID: '335',
 	VARIANT_CNT: 14,
 	GITLAB_DOMAIN: 'https://git.miem.hse.ru/api/v4',
@@ -45,11 +60,12 @@ var global = {
 	CLASSROOM: {
 		COURSEWORK: "Экзамен"
 	},
-	GOOGLE_API_KEY: 'AIzaSyBp-AIzaSyAaqI7gI-3rqlyVnMld5qo-4sLKCzIe0OM',
 	ADMIN: {
 		EMAIL: "c.grader2@miem.hse.ru",
 		NAME: "Комил"
 	}
 }
+
+config_init();
 
 module.exports = global;

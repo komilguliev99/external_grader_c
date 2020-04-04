@@ -2,14 +2,15 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-19 15:14:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-02 17:12:29
+ * @ Modified time: 2020-04-04 12:52:50
  * @ Description:
  */
 
 const		gitlab = require('../gitlab_scripts/gitlab');
-const		global = require('../configs/global')
+const		gl = require('../config/global')
 const		args = process.argv.slice(2);
 
+var     EXT_PR_INFO     = gl.external_configs.projects_info;
 
 function			setFlags(flags)
 {
@@ -47,7 +48,7 @@ async function		getProjects()
 {
 	let		content;
 
-	content = JSON.parse(await	gitlab.getRepoFile(global.CONFIG_ID, "projects.json"));
+	content = JSON.parse(await	gitlab.getRepoFile(gl.external_configs.id, "projects.json"));
 	if (!content)
 		return false;
 	else
@@ -146,7 +147,7 @@ async function		deleteProjects()
 		'commit_message': 'created new projects'
 	};
 
-	gitlab.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+	gitlab.put(`/projects/${gl.external_configs.id}/repository/files/${EXT_PR_INFO}`, params);
 
 	showProjects(projects);
 

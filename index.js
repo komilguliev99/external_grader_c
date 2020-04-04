@@ -2,37 +2,34 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-02 14:09:54
+ * @ Modified time: 2020-04-04 13:22:26
  * @ Description:
  */
 
 
 const	gitlab		= require('./gitlab_scripts/gitlab');
-const	fs 			= require('fs');
-const	global		= require('./configs/global');
+const	gl			= require('./config/global');
 const	Grader		= require('./grader_scripts/components/Grader');
-const	lib			= require('./lib');
+const	lib			= require('./config/lib');
 const	zulip		= require('./gitlab_scripts/zulip');
-const	gapi	= require('./google_scripts/classroom');
+const	gapi		= require('./google_scripts/classroom');
 
 const	defaultCourseId = 56269545514;
 
 
-var		VARIANTS	=null;
 var		confFile	=null;
 var		projects	=null;
 
 async function prepare_configs()
 {
-	confFile = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'projects.json'));
+	confFile = JSON.parse(await gitlab.getRepoFile(gl.external_configs.id, 'projects.json'));
 	projects = confFile.projects;
 	if (!projects)
 		console.log("there is no projects for testing!");
 
-	global.TASKS_INFO = JSON.parse(await gitlab.getRepoFile(global.CONFIG_ID, 'tasks_info.json')).variants;
-	if (!global.TASKS_INFO)
+	gl.tasks_info = JSON.parse(await gitlab.getRepoFile(gl.external_configs.id, 'tasks_info.json')).variants;
+	if (!gl.tasks_info)
 		console.log("there is no task variants for checking!");
-	VARIANTS = global.TASKS_INFO;
 }
 
 async function checkLastUpdate(student)
@@ -59,12 +56,12 @@ async function checkLastUpdate(student)
 function			reset_grader(variant, tasks)
 {
 	Grader.reset();
-	taskCount = VARIANTS.taskCounts[variant - 1];
+	taskCount = gl.tasks_info.taskCounts[variant - 1];
 	Grader.variant = variant;
 	Grader.taskFiles = tasks;
 	Grader.taskCount = taskCount;
-	Grader.types = VARIANTS.types[variant - 1];
-	Grader.weights = VARIANTS.weights[variant - 1];
+	Grader.types = gl.tasks_info.types[variant - 1];
+	Grader.weights = gl.tasks_info.weights[variant - 1];
 }
 
 async function checkRepo() {
@@ -85,7 +82,7 @@ async function checkRepo() {
 			st = true;
 			
 			let		j = 0;
-			while (j < VARIANTS.taskCounts[variant - 1])
+			while (j < gl.tasks_info.taskCounts[variant - 1])
 			{
 				let		content = await gitlab.getRepoFile(projects[i].projectId, `code${++j}.c`);
 				console.log("CONTENT", content);
@@ -103,7 +100,7 @@ async function checkRepo() {
 				
 				console.log(result);
 				zulip.sendMessage({
-					to: "kzguliev@miem.hse.ru",		//projects[i].gmail
+					to: "c.grader2@miem.hse.ru",		//projects[i].gmail
 					type: "private",
 					content: result
 				});
@@ -128,7 +125,7 @@ async function checkRepo() {
 			'commit_message': 'created new projects'
 		};
 
-		gitlab.put(`/projects/${global.CONFIG_ID}/repository/files/projects.json`, params);
+		gitlab.put(`/projects/${gl.external_configs.id}/repository/files/projects.json`, params);
 	}
 	else
 		console.log("No changes!");

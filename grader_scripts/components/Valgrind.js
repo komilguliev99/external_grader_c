@@ -2,20 +2,28 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-11-29 11:25:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-01-25 10:45:41
+ * @ Modified time: 2020-04-04 12:40:57
  * @ Description:
  */
 
 var fs = require('fs');
-var global = require('../../configs/global');
+var gl = require('../../config/global');
 
 var Valgrind = {
-	cmd: global.VALGRIND.CMD,
-	logFile: `./${global.GRADER.PATH}${global.VALGRIND.LOG_FILE}`,
-	whatLeaks: Object.keys(global.VALGRIND.LEAKS_MESSAGES),
-	leakMessage: global.VALGRIND.LEAKS_MESSAGES,
-	templateMessages: global.VALGRIND.TEMPLATES,
 	leaks: {},
+
+	initConfigs: function ()
+	{
+		if (!gl.valgrind.cmd || !gl.grader.path || !gl.valgrind.log_file
+			|| !gl.valgrind.leaks_messages || !gl.valgrind.templates)
+			console.log("wrong configuration of valgrid!");
+	
+		this.cmd = gl.valgrind.cmd;
+		this.logFile = `./${gl.grader.path}${gl.valgrind.log_file}`;
+		this.whatLeaks = Object.keys(gl.valgrind.leaks_messages);
+		this.leakMessage = gl.valgrind.leaks_messages;
+		this.templateMessages = gl.valgrind.templates;
+	},
 
 	getCommand: function () {
 		return `${this.cmd} --log-file=${this.logFile}`;
@@ -100,5 +108,7 @@ var Valgrind = {
 		return logs;
 	}
 }
+
+Valgrind.initConfigs();
 
 module.exports = Valgrind;

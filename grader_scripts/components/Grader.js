@@ -2,33 +2,39 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-01 15:16:46
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-24 15:42:44
+ * @ Modified time: 2020-04-04 13:26:47
  * @ Description:
  */
 
 const 		util = require('util');
 const 		exec = util.promisify(require('child_process').exec);
-const		execSync = require('child_process').execSync;
 const 		fs = require('fs');
 const 		Valgrind = require('./Valgrind');
 const 		Trace = require('./Trace');
-const 		global = require('../../configs/global')
-const 		lib = require('../../lib')
+const 		gl = require('../../config/global')
+const 		lib = require('../../config/lib')
 
 const Grader = {
 	variant: 1,
-	status: ["FAIL", "OK", "ERROR", "TIME_OUT"],
 	userOut: null,
 	valgrind: Valgrind,
 	trace: Trace,
 	localTrace: '',
 	currentTask: 1,
 	hash: '',
-	binaryDelete: global.GRADER.BINARY_DELET,
 	taskFiles: [],
 	results: [],
 	grades: [],
-	testpathTemplate: `./${global.GRADER.PATH}tests/variant_`,
+
+	initConfgis: function ()
+	{
+		if (!gl.grader.path)
+			console.log("The PATH of grader not setted!");
+		this.path = gl.grader.path;
+		this.binaryDelete = gl.delete_binary === undefined ? true : gl.delete_binary;
+		this.status = gl.grader.status;
+		this.testpathTemplate = `./${this.path}tests/variant_`
+	},
 
 	getFormat: function(number)
 	{
@@ -111,7 +117,7 @@ const Grader = {
 	compileFiles: async function()
 	{
 		try {
-			let 	cmd = `gcc ./${global.GRADER.PATH}user_task.c -o ./${global.GRADER.PATH}binary_${this.hash}`;
+			let 	cmd = `gcc ./${this.path}user_task.c -o ./${this.path}binary_${this.hash}`;
 			let 	executed = await this.execute(cmd);
 			
 			return 1;
@@ -141,7 +147,7 @@ const Grader = {
 
 	executeBinary: async function(test, resolve)
 	{
-		this.userOut = await this.execute(`${this.valgrind.getCommand()} ./${global.GRADER.PATH}binary_${this.hash} \< ${this.getTestPath(test)}`);
+		this.userOut = await this.execute(`${this.valgrind.getCommand()} ./${this.path}binary_${this.hash} \< ${this.getTestPath(test)}`);
 		this.valgrind.checkLog();
 		if (await this.checkOutputs(test)) {
 			this.results.push(1);
@@ -219,7 +225,7 @@ const Grader = {
 				exist = fs.existsSync(this.getTestPath(++i));
 			}
 			if (this.binaryDelete)
-				this.execute(`rm ./${global.GRADER.PATH}binary_${this.hash}`);
+				this.execute(`rm ./${this.path}binary_${this.hash}`);
 		}
 		this.setResults(task);
 		this.reset();
@@ -246,5 +252,7 @@ const Grader = {
 			await this.startFor(++i);
 	}
 };
+
+Grader.initConfgis();
 
 module.exports = Grader;
