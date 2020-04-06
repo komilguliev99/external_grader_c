@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-01 15:16:46
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 13:26:47
+ * @ Modified time: 2020-04-05 23:53:22
  * @ Description:
  */
 
@@ -163,7 +163,7 @@ const Grader = {
 	{
 		let			testWeight = 100/this.results.length;
 		let			falls = this.weights[this.taskCount] ? this.weights[this.taskCount] : 25;
-		this.localTrace += '\t*ТЕСТЫ:'
+		this.localTrace += '\n*ТЕСТЫ:'
 		this.results.forEach(el => {
 			this.localTrace += `[${this.status[el]}]`;
 			if (el == 1)
@@ -172,8 +172,8 @@ const Grader = {
 		console.log("GRADE: ", this.grades[task - 1]);
 		if (!this.valgrind.getStatus())
 			this.grades[task - 1] -= falls;
-		this.localTrace += '\n\t*УТЕЧКИ В ПАМЯТИ:' + this.valgrind.getLogs();
-		this.localTrace += '```\tGRADE: ' + this.grades[task - 1] + '```\n\n';
+		this.localTrace += '\n*УТЕЧКИ В ПАМЯТИ:' + this.valgrind.getLogs();
+		this.localTrace += 'GRADE: ' + this.grades[task - 1] + '\n```\n\n';
 
 		this.trace.write(this.localTrace, append);
 		return this.localTrace;
@@ -203,7 +203,7 @@ const Grader = {
 	{
 		this.currentTask = task;
 		this.hash = this.generateHash();
-		this.localTrace += `**task_${task}:**\n`;
+		this.localTrace +=`\n**task_${task}:**\n` + "```";
 		this.grades[task - 1] = 0;
 		let 	compiled = await this.compileFiles();
 

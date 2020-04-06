@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:47:04
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 13:07:49
+ * @ Modified time: 2020-04-04 21:25:54
  * @ Description:
  */
 
@@ -32,11 +32,11 @@ var gitlab = {
 				};
 
 		await axios.post(`${this.domain}${url}`, params, configs)
-		.then(function (response) {
+		.then((response) => {
 			//console.log(response.data);
 			data = response.data;
 		})
-		.catch(function (error) {
+		.catch((error) => {
 			console.log(`error: post: -url: ${this.domain}${url}`);
 			console.log("Message", error.response.data.message);
 			data = error;
@@ -52,11 +52,11 @@ var gitlab = {
 		};
 
 		axios.put(`${this.domain}${url}`, params, configs)
-		.then(function (response) {
+		.then((response) => {
 			//console.log(response.data);
 			data = response.data;
 		})
-		.catch(function (error) {
+		.catch((error) => {
 			console.log(error);
 			data = error;
 		});

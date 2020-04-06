@@ -2,17 +2,17 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-19 15:14:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 12:52:50
+ * @ Modified time: 2020-04-05 15:28:07
  * @ Description:
  */
 
 const		gitlab = require('../gitlab_scripts/gitlab');
 const		gl = require('../config/global')
-const		args = process.argv.slice(2);
+const		parameters = process.argv.slice(2);
 
 var     EXT_PR_INFO     = gl.external_configs.projects_info;
 
-function			setFlags(flags)
+function			setFlags(flags, args)
 {
 	let		i = 0;
 	while (i < args.length)
@@ -20,26 +20,32 @@ function			setFlags(flags)
 		let		item = args[i].split('=');
 		console.log(item);
 
-		if (item[0] == '--gmail' && item[1])
+		if (item[0] == '--gmail' && item[1] && ++flags.allow)
 			flags.gmail = item[1];
-		else if (item[0] == '--group' && item[1])
+		else if (item[0] == '--group' && item[1] && ++flags.allow)
 			flags.group = item[1];
-		else if (item[0] == '--git-prefix' && item[1])
+		else if (item[0] == '--git-prefix' && item[1] && ++flags.allow)
 			flags.gitPrefix = item[1];
-		else if (item[0] == '--pr-ids' && item[1])
+		else if (item[0] == '--pr-ids' && item[1] && ++flags.allow)
 			flags.prIds = item[1].split(' ');
-		else if (item[0] == '--cw-title' && item[1])
+		else if (item[0] == '--cw-title' && item[1] && ++flags.allow)
 			flags.cwTitle = item[1];
-		else if (item[0] == '--cw-ids' && item[1])
+		else if (item[0] == '--cw-ids' && item[1] && ++flags.allow)
 			flags.cwIds = item[1].split(' ');
-		else if (item[0] == '--active')
+		else if (item[0] == '--active' && ++flags.allow)
 			flags.active = 1;
-		else if (item[0] == '--not-active')
+		else if (item[0] == '--not-active' && ++flags.allow)
 			flags.active = 0;
-		else if (item[0] == '--all')
+		else if (item[0] == '--all' && ++flags.allow)
 			flags.all = 1;
-		else if (item[0] == '--ignore')
+		else if (item[0] == '--ignore' && ++flags.allow)
 			flags.ignore = 1;
+		else if (item[0] == '--no-prid' && ++flags.allow)
+			flags.noPrId = 1;
+		else if (item[0] == '--no-course' && ++flags.allow)
+			flags.noCourse = 1;
+		else if (item[0] == '--no-cw' && ++flags.allow)
+			flags.noCw = 1;
 		i++;
 	}
 }
@@ -67,24 +73,35 @@ function			showProjects(projects)
 	});
 }
 
-async function		deleteProjects()
+async function		deleteProjects(args)
 {
 	const		flags = {
 		active: -1,
 		all: 0,
-		ignore: 0
+		ignore: 0,
+		allow: 0,
 	};
 	let			projects;
 	let			fprojects;
 
+	if (!args)
+		args = parameters;
 	// setting flags
-	setFlags(flags);
+	setFlags(flags, args);
 
+	console.log(flags);
 	if (flags.ignore)
 	{
 		console.log(flags.prIds);	
 		gitlab.deleteProjects(flags.prIds);
-		return 0;
+		return flags.prIds.map(el => {
+			return {
+				gmail: "unknown",
+				group: "unknown",
+				projectId: el,
+				cwTitle: "unknown"
+			};
+		});
 	}
 
 	// reading projects info
@@ -125,32 +142,46 @@ async function		deleteProjects()
 		
 		if (flags.cwTitle)
 			projects = projects.filter(el => el.cwTitle == flags.cwTitle);
+		
+		if (flags.noPrId)
+			projects = projects.filter(el => !el.projectId);
+		
+		if (flags.noCourse)
+			projects = projects.filter(el => !el.courseId);
+		
+		if (flags.noCw)
+			projects = projects.filter(el => !el.cwId);
 	}
 
-	fprojects = fprojects.filter(el => {
-		let		i = 0;
-		while (i < projects.length)
-			if (el.projectId == projects[i++].projectId)
-				return false;
-		
-		return true;
-	})
-
-	projects = projects.filter(el => {
-		if (el.projectId)
-			gitlab.deleteProject(el.projectId);
-	});
-
-	const   params = {
-		branch: 'master',
-		content: JSON.stringify({ projects: fprojects }),
-		'commit_message': 'created new projects'
-	};
-
-	gitlab.put(`/projects/${gl.external_configs.id}/repository/files/${EXT_PR_INFO}`, params);
-
-	showProjects(projects);
-
+	if (flags.allow)
+	{
+		fprojects = fprojects.filter(el => {
+			let		i = 0;
+			while (i < projects.length)
+				if (el.projectId == projects[i++].projectId)
+					return false;
+			
+			return true;
+		})
+	
+		projects.forEach(el => {
+			if (el.projectId)
+				gitlab.deleteProject(el.projectId);
+		});
+	
+		const   params = {
+			branch: 'master',
+			content: JSON.stringify({ projects: fprojects }),
+			'commit_message': 'created new projects'
+		};
+	
+		gitlab.put(`/projects/${gl.external_configs.id}/repository/files/${EXT_PR_INFO}`, params);
+	
+		//showProjects(projects);
+		return projects;
+	}
+	return [];
 }
 
-deleteProjects();
+
+module.exports.deleteProjects = deleteProjects;

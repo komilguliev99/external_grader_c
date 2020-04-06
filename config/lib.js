@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-24 08:01:44
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-03-25 22:16:41
+ * @ Modified time: 2020-04-05 14:14:56
  * @ Description:
  */
 
@@ -25,6 +25,12 @@ var		lib = {
 	},
 	sleep: function (ms) {
 		return new Promise(resolve => setTimeout(resolve, ms));
+	},
+	addCharCnt: function (content, char, cnt)
+	{
+		while (cnt--)
+			content += char;
+		return content;
 	}
 }
 

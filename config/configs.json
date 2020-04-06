@@ -34,8 +34,10 @@
 			"possibly": "возможных"
         }
     },
-    "admin": {
-        "email": "c.grader2@miem.hse.ru",
-        "fio": "Комил Гулиев"
-    }
+    "admins": [
+        {
+            "email": "c.grader2@miem.hse.ru",
+            "fio": "Комил Гулиев"
+        }
+    ]
 }

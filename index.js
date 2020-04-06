@@ -2,13 +2,13 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-23 11:46:10
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 13:22:26
+ * @ Modified time: 2020-04-06 00:13:42
  * @ Description:
  */
 
 
-const	gitlab		= require('./gitlab_scripts/gitlab');
 const	gl			= require('./config/global');
+const	gitlab		= require('./gitlab_scripts/gitlab');
 const	Grader		= require('./grader_scripts/components/Grader');
 const	lib			= require('./config/lib');
 const	zulip		= require('./gitlab_scripts/zulip');
@@ -85,7 +85,6 @@ async function checkRepo() {
 			while (j < gl.tasks_info.taskCounts[variant - 1])
 			{
 				let		content = await gitlab.getRepoFile(projects[i].projectId, `code${++j}.c`);
-				console.log("CONTENT", content);
 				if (content)
 					tasks.push(content);
 			}
@@ -95,8 +94,8 @@ async function checkRepo() {
 				reset_grader(variant, tasks);
 				await Grader.run();
 				let trace = Grader.getTrace();
-				let result = `Вы загрузили новые данные студент ${projects[i].userName}\nДата загрузки: ${new Date(projects[i].lastUpdate)} \n\n ${trace}\n`;
-				result = result + "```Оценка за работу: " + Grader.getAssignedGrade() + "```";
+				let result = `Вы загрузили новые данные студент ${ projects[i].userName }\nДата загрузки: ${new Date(projects[i].lastUpdate)} \n\n${trace}\n`;
+				result = result + "```quote\n" + "Оценка за работу: " + Grader.getAssignedGrade() + "\n```";
 				
 				console.log(result);
 				zulip.sendMessage({

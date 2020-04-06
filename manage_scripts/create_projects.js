@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-10 23:21:24
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 13:01:50
+ * @ Modified time: 2020-04-05 14:24:50
  * @ Description:
  */
 
@@ -12,7 +12,7 @@ const	gl          = require('../config/global');
 const	lib         = require('../config/lib');
 const	gapi        = require('../google_scripts/classroom');
 
-const   args = process.argv.slice(2);
+const   parameters = process.argv.slice(2);
 var   projects = [];
 
 var		confFile	    = null;
@@ -74,10 +74,10 @@ async function      createCourseWork(title)
         console.log("WARNING: no students registered in course!");
 }
 
-function            setFlags(flags)
+function            setFlags(flags, args)
 {
     let     i = -1;
-    while (args[++i])
+    while (args && args[++i])
     {
         let     item = args[i].split('=');
 
@@ -104,7 +104,7 @@ function            setFlags(flags)
     }
 }
 
-async function      create()
+async function      createProjects(args)
 {
     const   flags = {
         gitPrefix: Math.random().toString(36).substring(7),
@@ -117,7 +117,9 @@ async function      create()
 
     let         error = 0;
 
-    setFlags(flags);
+    if (!args)
+        args = parameters;
+    setFlags(flags, args);
 
     // reading students info
     if (flags.gmail)
@@ -168,6 +170,9 @@ async function      create()
         else
             gitlab.uploadFile({ content: JSON.stringify({ projects }), path: EXT_PR_INFO, projectId: CONFIG_ID });
     }
+    let     notCreated = students.filter(el => !el.projectId);
+    let     created = students.filter(el => el.projectId);
+    return { success: created, fail: notCreated };
 }
 
-create();
+module.exports.createProjects = createProjects;

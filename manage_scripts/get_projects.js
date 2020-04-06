@@ -2,17 +2,17 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-30 15:04:20
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 12:48:44
+ * @ Modified time: 2020-04-04 14:27:00
  * @ Description:
  */
 
 
 const		gitlab = require('../gitlab_scripts/gitlab');
 const		gl = require('../config/global')
-const		args = process.argv.slice(2);
+const		parameters = process.argv.slice(2);
 
 
-function			setFlags(flags)
+function			setFlags(flags, args)
 {
 	let		i = 0;
 	while (i < args.length)
@@ -74,7 +74,7 @@ function			showProjects(projects)
 	});
 }
 
-async function		getProjects()
+async function		getProjects(args)
 {
 	const		flags = {
 		active: -1,
@@ -84,8 +84,10 @@ async function		getProjects()
 	let			projects;
 	let			fprojects;
 
+	if (!args)
+		args = parameters;
 	// setting flags
-	setFlags(flags);
+	setFlags(flags, args);
 
 	// reading projects info
 	projects = await getConfigProjects()
@@ -148,6 +150,9 @@ async function		getProjects()
 		showProjects(projects);
 	else
 		console.log("There is no project with such params!");
+	return projects;
 }
 
-getProjects();
+// getProjects();
+
+module.exports.getProjects = getProjects;
