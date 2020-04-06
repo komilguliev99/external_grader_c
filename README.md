@@ -1,24 +1,91 @@
 # External Grader for programming in C
 
-## Описание
+## <a name="desc"></a> Описание
 Внешний грейдер для проверки портивных задач на языке программирования С. ПРинцип работы грейдера заключается в том что, оно проверяет список своих проектов на новые изменения через определенный отрезок времени.
 Задачи проверяются синхронным образом, то есть грейдер в одно время может принимать только одну задачу на проверку. В ходе проверки грейдер выставляет оценку в классрум, если студент присоединился к нужному курсу, в противном случае не выставляется оценка. Грейдер возвращает подробные коментарии к задаче в zulip, если студент имеет аккаунт в zulip, по его почте ао которой было создано задача.
 
 ***ВАЖНО:***
 > 	*Прежде чем ставит задачки с помощью грейдера, убедитесь что по заданному **email** существует аккаунты **gitlab**, **zulip**, **cassroom**, также не забывайте присоединится к курсу в классруме по которой ставится задача.*
 
-## Оглавление
+## <a name="links"></a> Оглавление
 * [Описание](#desc)
-* [Оглавление](#Оглавление)
+* [Оглавление](#links)
 * [Установка](#install)
+    * [Настройки GoogleAPI](#google_scripts)
+    * [Настройки GitlabAPI](#gitlab_scripts)
+    * [Zulip bot](#zulip_scripts)
 * [Архитектура грейдера](#architecture)
 * [Функционал грейдера](#functionality)
 
 
 ## <a name="install"></a> Установка
-В первую очередь нужно зайти в севрис **google API console**, ссылка на сервис https://console.developers.google.com/apis/dashboard.
-Далее во вкладках указано названия проектов, если оно у вас есть:
 
+### <a name="google_scripts"></a> Настройки GoogleAPI
+В первую очередь нужно зайти в севрис **google API console**, ссылка на сервис https://console.developers.google.com/apis/dashboard.
+
+Далее во вкладках указано названия проектов, если оно у вас есть:
+![google API console](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/1.JPG)
+
+Нажымаете на вкладку и появляется окно в котром нужно создать новый проект.
+![creat new project](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/2.JPG)
+
+Далее в левом главном меню есть вкладки, кликайте во вкладку "Учетные данные".
+![security](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/3.JPG)
+
+После перехода в учетных данных, в врехней части окно есть вкладка **СОЗДАТЬ УЧЕТНЫЕ ДАННЫЕ**, после нажатия на нее выбираете тип учетных данных. Выбирайте тип **идентификатора клиента OAuth**. После нужно будет выбрать тип приложения, и нужно выбрать другое.
+![creating credentials](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/4.JPG)
+
+После создания учетных данных, в странице <a name="">Учетные данные</a>, появляется новый клиент **Auth**. Нужно скачать **credentials.json** клиента, и заменит их в проекте, по пути **google_script/credentials.json**.
+![credentials.json](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/5.JPG)
+
+Также в скрипт **gapi.js** по такому же пути, дать следующие разрешения:
+- **https://www.googleapis.com/auth/classroom.courses**
+- **https://www.googleapis.com/auth/classroom.courses.readonly**
+- **https://www.googleapis.com/auth/classroom.coursework.students**
+- **https://www.googleapis.com/auth/classroom.coursework.students.readonly**
+- **https://www.googleapis.com/auth/classroom.coursework.me.readonly**
+- **https://www.googleapis.com/auth/classroom.coursework.me**
+- **https://www.googleapis.com/auth/classroom.rosters**
+- **https://www.googleapis.com/auth/classroom.rosters.readonly**
+- **https://www.googleapis.com/auth/classroom.profile.emails**
+- **https://www.googleapis.com/auth/classroom.profile.photos**
+- **https://www.googleapis.com/auth/admin.directory.group.readonly**
+- **https://www.googleapis.com/auth/admin.directory.group**
+- **https://www.googleapis.com/auth/admin.directory.user.readonly**
+- **https://www.googleapis.com/auth/admin.directory.user**
+- **https://www.googleapis.com/auth/admin.directory.orgunit**
+- **https://www.googleapis.com/auth/admin.directory.orgunit.readonly**
+
+В первом запуске приложения, скрипт выдаст **url**, и будет ждать ввод **хеша** для установления **токен**. Для того чтобы установит токен, нужно перейти по ссылке и согласится на выдачи доступа исходя из заданных више разрешениях. После согласия на доступ в проекте будет скачиватья токен, по которому сервис будет делать запросы. В этом и заканчивается настройка **google скриптов**.
+
+### <a name="gitlab_scripts"></a> Настройки GitlabAPI
+Перейти по ссылке https://git.miem.hse.ru/, и зайти под свой аккаунт.
+
+Далее нужно зайти в настройки, как указано на картинке.
+![gitlab](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/6.JPG)
+
+В левом меню, нужно выбрать **access token**.
+
+![gitlab_menu](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/7.JPG)
+
+Далее можно создавать токен для gitlabAPI, но не забывайте дать разрешения на все виды сервисов. После создания токена, нужно скопирповать ее в настройки проекта по пути **config/configs.json**.
+![gitlab_token](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/8.JPG)
+
+### <a name="zulip_scripts"></a> Zulip bot
+Зайти в приложения Zulip, и войти в свою организацию. Далее выбираете настройки.
+![zulip_settings](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/9.JPG)
+
+Перейти во вкладку **Ваши боты**
+
+![zulip_bots](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/10.JPG)
+
+Создать нового бота, и указать тип **Generic bot**.
+
+![create_bots](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/11.JPG)
+
+После создания созданный бот поялвяется в списке вашых ботов. Нужно будеть скачать ее настройки, и заменит их по пути **gitlab_scripts/zuliprc**.
+
+![setting_bot](https://github.com/KomilGuliev/external_grader_c/blob/dev/instruction/12.JPG)
 
 ## <a name="architecture"></a> Архитектура
 В проекте используются 4 разных API, такие как Classroom API(Google), Directory API(Google), Gitlab API и API группового чата Zulip. Принцип работы проекта заключается в том что оно протестирует программы написанные студентами, и отдает полный анализ кода. Грейдер запускается на удаленном сервере, и у него есть внутренние и внешние конфигурации. Внешные конфигурация будет находится на отдельной репозитории в gitlab. В конфигурации указывается полная информация о созданных проектов и информация о вариантах задач. Грейдер отслеживает те проекты которые у него есть в конфигурации. В информации о проектах входит:
