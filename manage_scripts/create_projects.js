@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-10 23:21:24
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-05 14:24:50
+ * @ Modified time: 2020-04-07 18:24:52
  * @ Description:
  */
 
@@ -19,7 +19,6 @@ var		confFile	    = null;
 var     CONFIG_ID       = gl.external_configs.id;
 var     EXT_PR_INFO     = gl.external_configs.projects_info;
 var     EXT_TSK_INFO    = gl.external_configs.tasks_info;
-console.log(gl);
 
 if (!gl.external_configs.id)
     console.log("Missing id of external configs!");

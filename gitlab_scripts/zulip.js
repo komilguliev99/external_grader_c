@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-24 12:56:54
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-06 00:19:36
+ * @ Modified time: 2020-04-07 18:25:34
  * @ Description:
  */
 
@@ -212,6 +212,11 @@ const		CMD = {
 		newEmail = newEmail.slice(0, newEmail.length - 1);
 		addAdmin(newEmail);
 		return `Был добавлен новый админ с eamil ${newEmail}`;
+	},
+
+	'test': async function (args, msg)
+	{
+		
 	}
 }
 
@@ -220,7 +225,6 @@ function			isAdmin(email)
 		let			i  = 0;
 		let			admins = global.admins;
 	
-		console.log(admins);
 		while (i < admins.length)
 		{
 			if (admins[i].email == email)
@@ -327,13 +331,11 @@ async function		listenMessage(zulip)
 zulip({ zuliprc }).then(async function (zulip){
 	
 	let		admins = JSON.parse(await gitlab.getRepoFile(global.external_configs.id, 'admins.json'));
-	console.log("ADMINS: ", admins);
 	if (admins && admins.admins)
 		global.admins = global.admins.concat(admins.admins);
 
     // Fetch messages anchored around id (1 before, 1 after)
 	listenMessage(zulip);
-	console.log("JJJJJJJ");
 
 })
 

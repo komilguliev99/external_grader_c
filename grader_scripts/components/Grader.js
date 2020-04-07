@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-01 15:16:46
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-05 23:53:22
+ * @ Modified time: 2020-04-07 18:58:13
  * @ Description:
  */
 
@@ -227,7 +227,7 @@ const Grader = {
 			if (this.binaryDelete)
 				this.execute(`rm ./${this.path}binary_${this.hash}`);
 		}
-		this.setResults(task);
+		this.setResults(task, false);
 		this.reset();
 	},
 	

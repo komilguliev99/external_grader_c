@@ -1,20 +1,30 @@
-#include "stdio.h"
+#include <stdio.h>
 
-int			main(void)
+int         main(void)
 {
-	int			n, x;
-	int			a[2000];
-	int			i = 0;
+    int     a[1000][1000];
+    int     n, m, x, i, j;
+    float     amg = 0, cnt = 0;
 
-	scanf("%d", &n);
-	while (i < n)
-	{
-		scanf("%d", &x);
-		a[i] = x;
-		if (i % 2 == 0)
-			printf("%d ", a[i]);
-		i++;
-	}
-	return (0);
+    scanf("%d", &n);
+    scanf("%d", &m);
+    i = 0;
+    while (i < n)
+    {
+        j = 0;
+        while (j < m)
+        {
+            scanf("%d", &x);
+            a[i][j] = x;
+            if (i % 2 == 1 && x % 2 == 0)
+            {
+                amg += x;
+                cnt++;
+            }
+            j++;
+        }
+        i++;
+    }
+
+    printf("%f", amg / cnt);
 }
-

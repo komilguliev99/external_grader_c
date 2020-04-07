@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-12-02 22:53:07
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 12:41:25
+ * @ Modified time: 2020-04-07 18:59:40
  * @ Description:
  */
 
@@ -11,18 +11,17 @@ var gl = require('../../config/global')
 
 var Trace = {
 	traceFile: `./${gl.grader.path}traces`,
+	trace: '',
 
 	write: function (data, append) {
-		if (append)
-			fs.appendFileSync(this.traceFile, data);
-		else
-			fs.writeFileSync(this.traceFile, data);
+		this.trace += data;
 	},
 
 	getContent: function () {
-		let content = fs.readFileSync(this.traceFile);
-		return content.toString();
-	}
+		return this.trace;
+	},
+
+	clearTrace: () => this.trace = ''
 }
 
 module.exports = Trace;
