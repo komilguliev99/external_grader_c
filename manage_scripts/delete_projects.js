@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-19 15:14:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-05 15:28:07
+ * @ Modified time: 2020-04-09 02:06:09
  * @ Description:
  */
 
@@ -105,7 +105,7 @@ async function		deleteProjects(args)
 	}
 
 	// reading projects info
-	projects = await getProjects()
+	projects = gl.projects;
 	if (!projects || !projects.length)
 	{
 		console.log("No projects found!")

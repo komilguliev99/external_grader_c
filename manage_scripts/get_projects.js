@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-03-30 15:04:20
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 14:27:00
+ * @ Modified time: 2020-04-09 02:06:38
  * @ Description:
  */
 
@@ -90,7 +90,7 @@ async function		getProjects(args)
 	setFlags(flags, args);
 
 	// reading projects info
-	projects = await getConfigProjects()
+	projects = gl.projects;
 	if (!projects || !projects.length)
 	{
 		console.log("No projects found!")
@@ -111,7 +111,7 @@ async function		getProjects(args)
 	{
 		if (flags.active == 0 || flags.active == 1)
 			projects = projects.filter(el => {
-				let	active = new Date(el.createdDate + el.limit)  <= new Date();
+				let	active = (el.createDate + el.limit)  > new Date().getTime();
 
 				if (active == flags.active)
 					return true;

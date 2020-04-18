@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2019-11-29 11:25:42
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-04 12:40:57
+ * @ Modified time: 2020-04-10 22:49:43
  * @ Description:
  */
 
@@ -74,7 +74,7 @@ var Valgrind = {
 	},
 
 	getMessage: function(type) {
-		let		message;
+		let		message = "Не было обнаружено!";
 
 		if (this.leaks[type].bytes)
 		{
@@ -104,7 +104,7 @@ var Valgrind = {
 		let		logs = keys.length > 0 ? '\n' : '';
 		
 		keys.forEach(key => logs += '\t\t\t' + this.getMessage(key) + '\n');
-		if (keys.length === 0) logs += "\n\t\t\t" + this.templateMessages.NO_LEAKS + "\n";
+		if (keys.length === 0) logs += "\n\t\t\t" + this.templateMessages.no_leaks + "\n";
 		return logs;
 	}
 }

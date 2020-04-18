@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-01-24 12:56:54
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-07 18:25:34
+ * @ Modified time: 2020-04-10 22:56:50
  * @ Description:
  */
 
@@ -16,6 +16,7 @@ const { createProjects } = require('../manage_scripts/create_projects');
 const { deleteProjects } = require('../manage_scripts/delete_projects');
 const { addAdmin } = require('../manage_scripts/add_admin');
 const gitlab = require('../gitlab_scripts/gitlab');
+const fs = require('fs');
  
 
 var		zlp = {
@@ -39,6 +40,7 @@ const		CMD = {
 			'--cw-ids', '--active', '--not-active', '--all', '--ignore', '--no-prid', 
 			'--no-course', '--no-cw'],
 		'add-admin': ['email'],
+		'test': []
 	},
 
 	isCmd: function (cmd)
@@ -214,43 +216,57 @@ const		CMD = {
 		return `Был добавлен новый админ с eamil ${newEmail}`;
 	},
 
-	'test': async function (args, msg)
+	'test': async function (args, msg, email)
 	{
-		
+		let	message = "--gmail=c.grader2@miem.hse.ru --task-variant=1";
+		let { success: projects } = await createProjects(message.split(' '));
+		message = "Был создан проект с параметрами " + message + '\n';
+
+		console.log(projects);
+
+		const	params = {
+			to: email,
+			type: "private",
+			content: message
+		};
+		zlp.sendMessage({ ...params });
+
+		let task1 = fs.readFileSync('gitlab_scripts/examples/code1.c').toString();
+		let task2 = fs.readFileSync('gitlab_scripts/examples/code2.c').toString();
+
+		await lib.sleep(7000);
+		params.content = "Было загружено новые работы!";
+		zlp.sendMessage({ ...params });
+
+		await this.upload(task1, 'code1.c', projects[0].projectId);
+		await lib.sleep(1000);
+		await this.upload(task2, 'code2.c', projects[0].projectId);
+	},
+
+	upload: async function (content, path, projectId)
+	{
+		await gitlab.uploadFile({
+			content,
+			projectId,
+			path
+		});
 	}
 }
 
 function			isAdmin(email)
-	{
-		let			i  = 0;
-		let			admins = global.admins;
-	
-		while (i < admins.length)
-		{
-			if (admins[i].email == email)
-				return true;
-			i++;
-		}
-		return false;
-	}
-
-function			getContent(res, cmd)
 {
-	if (cmd == 'create')
+	let			i  = 0;
+	let			admins = global.admins;
+
+	while (i < admins.length)
 	{
-		title += 'Было создано ряд задач:\n';
+		if (admins[i].email == email)
+			return true;
+		i++;
 	}
-	else if (cmd == 'get')
-	{
-		title += 'Список задач по заданным параметрам:\n';
-	}
-	else if (cmd == 'delete')
-	{
-		title += 'Было удалено ряд задач:\n';
-	}
-	else
-		title += 'Список доступных комманд:\n';
+	return false;
 }
+
 var 	lastMessage = null;
 
 async function		handleCmd(msg, email)
@@ -261,11 +277,11 @@ async function		handleCmd(msg, email)
 	if (CMD.isCmd(args[0]))
 	{
 		msg = msg.slice(args[0].length);
-		content = CMD[args[0]](args, msg);
+		content = CMD[args[0]](args, msg, email);
 	}
 	else if (isAdmin(email))
 	{
-		content = 'Вам доступны ряд таких комманд:\n';
+		content = 'Вам доступны следующие команды:\n';
 		Object.keys(CMD.cmds).forEach(el => {
 			content += `* **${el}:**\n`;
 			CMD.cmds[el].forEach(it => {
@@ -324,15 +340,11 @@ async function		listenMessage(zulip)
 	
 	zulip.messages.retrieve(readParams).then(messageHandler);
 
-	await lib.sleep(5000);
+	await lib.sleep(1000);
 	listenMessage(zulip);
 }
 
 zulip({ zuliprc }).then(async function (zulip){
-	
-	let		admins = JSON.parse(await gitlab.getRepoFile(global.external_configs.id, 'admins.json'));
-	if (admins && admins.admins)
-		global.admins = global.admins.concat(admins.admins);
 
     // Fetch messages anchored around id (1 before, 1 after)
 	listenMessage(zulip);

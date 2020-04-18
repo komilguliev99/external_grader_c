@@ -2,7 +2,7 @@
  * @ Author: Komil Guliev
  * @ Create Time: 2020-02-10 23:21:24
  * @ Modified by: Komil Guliev
- * @ Modified time: 2020-04-07 18:24:52
+ * @ Modified time: 2020-04-09 02:40:07
  * @ Description:
  */
 
@@ -13,7 +13,6 @@ const	lib         = require('../config/lib');
 const	gapi        = require('../google_scripts/classroom');
 
 const   parameters = process.argv.slice(2);
-var   projects = [];
 
 var		confFile	    = null;
 var     CONFIG_ID       = gl.external_configs.id;
@@ -28,20 +27,6 @@ const   conf = {
     courseId: 57365570536
 };
 gapi.class.setCourseId(conf.courseId);
-
-async function prepare_configs()
-{
-    console.log(CONFIG_ID, EXT_PR_INFO, EXT_TSK_INFO);
-	confFile = JSON.parse(await gitlab.getRepoFile(CONFIG_ID, EXT_PR_INFO));
-    console.log(confFile);
-    projects = confFile.projects;
-	if (!projects)
-		console.log("there is no projects for testing!");
-
-	gl.tasks_info = JSON.parse(await gitlab.getRepoFile(CONFIG_ID, EXT_TSK_INFO)).variants;
-    if (!gl.tasks_info)
-        console.log("there is no task variants for checking!");
-}
 
 async function    createGitlabProjects(students, flags)
 {
@@ -147,11 +132,12 @@ async function      createProjects(args)
         else 
             flags.cwId = flags.cwId;
 
-        await prepare_configs();
         await createGitlabProjects(students, flags);
     
-        let projects = JSON.parse(await gitlab.getRepoFile(CONFIG_ID, EXT_PR_INFO)).projects;
-    
+        let confFile = JSON.parse(await gitlab.getRepoFile(CONFIG_ID, EXT_PR_INFO));
+        let projects;
+        if (confFile)
+            projects = confFile.projects;
         if (projects)
             projects = [...students, ...projects];
         else
@@ -171,6 +157,9 @@ async function      createProjects(args)
     }
     let     notCreated = students.filter(el => !el.projectId);
     let     created = students.filter(el => el.projectId);
+
+    if (created)
+        gl.projects = gl.projects.concat(created);
     return { success: created, fail: notCreated };
 }
 
