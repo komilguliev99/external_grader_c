@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/KomilGuliev/grader_node_js#readme",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.2",
     "fs": "0.0.1-security",
     "googleapis": "^39.2.0",
     "zulip-js": "^2.0.7"
